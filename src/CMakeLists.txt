@@ -12,17 +12,11 @@ set(DUPLO_SRCS duplo/duplo-evaluator.cpp duplo/duplo-constructor.cpp duplo/duplo
 add_library(DUPLO ${DUPLO_SRCS})
 target_link_libraries(DUPLO ${GMP_LIBRARIES} ${GMPXX_LIBRARIES} STORAGE GARBLING CIRCUIT SPLIT_COMMIT)
 
-add_executable(DuploConstructor mains/duplo-const-main.cpp)
+add_executable(DuploConstructor duplo-mains/duplo-const-main.cpp)
 target_link_libraries(DuploConstructor DUPLO)
 
-add_executable(DuploEvaluator mains/duplo-eval-main.cpp)
+add_executable(DuploEvaluator duplo-mains/duplo-eval-main.cpp)
 target_link_libraries(DuploEvaluator DUPLO)
 
-# add_executable(MPCOutsourcingConstructor mains/mpc-outsourcing-const.cpp)
-# target_link_libraries(MPCOutsourcingConstructor DUPLO)
-
-# add_executable(MPCOutsourcingEvaluator mains/mpc-outsourcing-eval.cpp)
-# target_link_libraries(MPCOutsourcingEvaluator DUPLO)
-
-add_executable(TableProducer mains/table-producer.cpp)
+add_executable(TableProducer duplo-mains/table-producer.cpp)
 target_link_libraries(TableProducer DUPLO)

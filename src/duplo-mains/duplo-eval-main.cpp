@@ -1,12 +1,12 @@
-#include "mains/mains.h"
-#include "duplo/duplo-constructor.h"
+#include "duplo-mains/mains.h"
+#include "duplo/duplo-evaluator.h"
 
 int main(int argc, const char* argv[]) {
   ezOptionParser opt;
 
-  opt.overview = "DuploConstructor Passing Parameters Guide.";
-  opt.syntax = "Duploconst first second third forth fifth sixth";
-  opt.example = "Duploconst -n 4 -c aes -e 8,2,1 -ip 10.11.100.216 -p 28001\n\n";
+  opt.overview = "DuploEvaluator Passing Parameters Guide.";
+  opt.syntax = "Duploeval first second third forth fifth sixth";
+  opt.example = "Duploeval -n 4 -c aes -e 8,2,1 -ip 10.11.100.216 -p 28001 \n\n";
   opt.footer = "ezOptionParser 0.1.4  Copyright (C) 2011 Remik Ziemlinski\nThis program is free and without warranty.\n";
 
   opt.add(
@@ -29,7 +29,7 @@ int main(int argc, const char* argv[]) {
     "Number of circuits to produce and evaluate.", // Help description.
     "-n"
   );
-
+  
   opt.add(
     default_circuit_name.c_str(), // Default.
     0, // Required?
@@ -71,7 +71,7 @@ int main(int argc, const char* argv[]) {
     0, // Required?
     1, // Number of args expected.
     0, // Delimiter if expecting multiple args.
-    "Use ram", // Help description.
+    "Use disk", // Help description.
     "-d"
   );
 
@@ -104,8 +104,8 @@ int main(int argc, const char* argv[]) {
   int num_iters, num_execs_components, num_execs_auths, num_execs_online, port, ram_only;
   std::vector<int> num_execs;
   std::string circuit_name, ip_address, exec_name, circuit_file;
+  std::string prefix("eval_");
 
-  std::string prefix("const_");
   opt.get("-n")->getInt(num_iters);
   opt.get("-c")->getString(circuit_name);
   opt.get("-d")->getInt(ram_only);
@@ -120,7 +120,6 @@ int main(int argc, const char* argv[]) {
   opt.get("-ip")->getString(ip_address);
   opt.get("-p")->getInt(port);
 
-  //Set the circuit variables according to circuit_name
   ComposedCircuit composed_circuit;
 
   if (!circuit_file.empty()) {
@@ -183,18 +182,18 @@ int main(int argc, const char* argv[]) {
   }
 
   //Compute the required number of common_tools that are to be created. We create one main param and one for each sub-thread that will be spawned later on. Need to know this at this point to setup context properly
-
   int max_num_parallel_execs = max_element(num_execs.begin(), num_execs.end())[0];
 
-  DuploConstructor duplo_const(duplo_constant_seeds[0], max_num_parallel_execs, ram_only);
+  DuploEvaluator duplo_eval(duplo_constant_seeds[1], max_num_parallel_execs, ram_only);
 
-  duplo_const.Connect(ip_address, (uint16_t) port);
+  duplo_eval.Connect(ip_address, (uint16_t) port);
 
   std::cout << "====== " << num_iters << " x " << exec_name << " ======" << std::endl;
   if (!circuit_file.empty()) {
     std::cout << "====== " << circuit_file << " ======" << std::endl;  
   }
-  
+
+
 
   //Values used for network syncing after each phase
   uint8_t rcv;
@@ -202,69 +201,70 @@ int main(int argc, const char* argv[]) {
 
   //Run initial Setup (BaseOT) phase
   auto setup_begin = GET_TIME();
-  duplo_const.Setup();
+  duplo_eval.Setup();
   auto setup_end = GET_TIME();
 
-  uint64_t setup_data_sent = duplo_const.GetTotalDataSent();
+  uint64_t setup_data_sent = duplo_eval.GetTotalDataSent();
 
   //Run Preprocessing phase
   auto preprocess_begin = GET_TIME();
   for (int i = 0; i < composed_circuit.num_functions; ++i) {
-    duplo_const.PreprocessComponentType(composed_circuit.functions[i].circuit_name, composed_circuit.functions[i], composed_circuit.num_circuit_copies[i], num_execs_components);
+    duplo_eval.PreprocessComponentType(composed_circuit.functions[i].circuit_name, composed_circuit.functions[i], composed_circuit.num_circuit_copies[i], num_execs_components);
   }
   auto preprocess_end = GET_TIME();
 
-  //Sync with Evaluator
-  duplo_const.chan->recv(&rcv, 1);
-  duplo_const.chan->send(&snd, 1);
+  //Sync with Constructor
+  duplo_eval.chan->send(&snd, 1);
+  duplo_eval.chan->recv(&rcv, 1);
 
-  uint64_t preprocess_data_sent = duplo_const.GetTotalDataSent() - setup_data_sent;
+  uint64_t preprocess_data_sent = duplo_eval.GetTotalDataSent() - setup_data_sent;
 
   auto prepare_eval_begin = GET_TIME();
-  duplo_const.PrepareComponents(composed_circuit.num_inp_wires, num_execs_auths);
+  duplo_eval.PrepareComponents(composed_circuit.num_inp_wires, num_execs_auths);
   auto prepare_eval_end = GET_TIME();
 
-  //Sync with Evaluator
-  duplo_const.chan->recv(&rcv, 1);
-  duplo_const.chan->send(&snd, 1);
+  //Sync with Constructor
+  duplo_eval.chan->send(&snd, 1);
+  duplo_eval.chan->recv(&rcv, 1);
 
-  uint64_t prepare_data_sent = duplo_const.GetTotalDataSent() - setup_data_sent - preprocess_data_sent;
+  uint64_t prepare_data_sent = duplo_eval.GetTotalDataSent() - setup_data_sent - preprocess_data_sent;
 
   auto build_begin = GET_TIME();
-  duplo_const.Build(composed_circuit, num_execs_auths);
+  duplo_eval.Build(composed_circuit, num_execs_auths);
   auto build_end = GET_TIME();
 
-  //Sync with Evaluator
-  duplo_const.chan->recv(&rcv, 1);
-  duplo_const.chan->send(&snd, 1);
+  //Sync with Constructor
+  duplo_eval.chan->send(&snd, 1);
+  duplo_eval.chan->recv(&rcv, 1);
 
-  uint64_t build_data_sent = duplo_const.GetTotalDataSent() - setup_data_sent - preprocess_data_sent - prepare_data_sent;
+  uint64_t build_data_sent = duplo_eval.GetTotalDataSent() - setup_data_sent - preprocess_data_sent - prepare_data_sent;
 
-  osuCrypto::BitVector inputs(composed_circuit.num_const_inp_wires); //0 input
+  osuCrypto::BitVector inputs(composed_circuit.num_eval_inp_wires); // 0 input
+  BYTEArrayVector output_keys(composed_circuit.num_out_wires, CSEC_BYTES);
 
   auto eval_circuits_begin = GET_TIME();
-  duplo_const.Evaluate(composed_circuit, inputs, num_execs_online);
+  duplo_eval.Evaluate(composed_circuit, inputs, output_keys, num_execs_online);
   auto eval_circuits_end = GET_TIME();
 
-  //Sync with Evaluator
-  duplo_const.chan->recv(&rcv, 1);
-  duplo_const.chan->send(&snd, 1);
+  //Sync with Constructor
+  duplo_eval.chan->send(&snd, 1);
+  duplo_eval.chan->recv(&rcv, 1);
 
-  uint64_t eval_data_sent = duplo_const.GetTotalDataSent() - setup_data_sent - preprocess_data_sent - prepare_data_sent - build_data_sent;
+  uint64_t eval_data_sent = duplo_eval.GetTotalDataSent() - setup_data_sent - preprocess_data_sent - prepare_data_sent - build_data_sent;
 
   std::vector<osuCrypto::BitVector> outputs(composed_circuit.output_circuits.size());
   std::vector<std::vector<uint32_t>> const_output_idices = composed_circuit.GetOutputIndices(true);
   std::vector<std::vector<uint32_t>> eval_output_indices = composed_circuit.GetOutputIndices(false);
 
   auto decode_keys_begin = GET_TIME();
-  duplo_const.DecodeKeys(composed_circuit, const_output_idices, eval_output_indices, outputs, num_execs_online);
+  duplo_eval.DecodeKeys(composed_circuit, const_output_idices, eval_output_indices, output_keys, outputs, num_execs_online);
   auto decode_keys_end = GET_TIME();
 
-  //Sync with Evaluator
-  duplo_const.chan->recv(&rcv, 1);
-  duplo_const.chan->send(&snd, 1);
+  //Sync with Constructor
+  duplo_eval.chan->send(&snd, 1);
+  duplo_eval.chan->recv(&rcv, 1);
 
-  uint64_t decode_data_sent = duplo_const.GetTotalDataSent() - setup_data_sent - preprocess_data_sent - prepare_data_sent - build_data_sent - eval_data_sent;
+  uint64_t decode_data_sent = duplo_eval.GetTotalDataSent() - setup_data_sent - preprocess_data_sent - prepare_data_sent - build_data_sent - eval_data_sent;
 
   // Average out the timings of each phase and print results
   uint64_t setup_time_nano = std::chrono::duration_cast<std::chrono::nanoseconds>(setup_end - setup_begin).count();
@@ -286,19 +286,21 @@ int main(int argc, const char* argv[]) {
   std::cout << "=============================" << std::endl;
 
   std::cout << "Ind. Preprocess ms: "
-            << (double)(preprocess_time_nano + prepare_eval_time_nano) / num_iters / 1000000
-            << ", data sent: " << (double)(preprocess_data_sent + prepare_data_sent) / num_iters / 1000 << " kB" << std::endl;
+            << (double) (preprocess_time_nano + prepare_eval_time_nano) / num_iters / 1000000
+            << ", data sent: " << (double) (preprocess_data_sent + prepare_data_sent) / num_iters / 1000 << " kB" << std::endl;
   std::cout << "D. Preprocess ms: " << (double) build_time_nano / num_iters / 1000000 << ", data sent: " << (double) build_data_sent / num_iters / 1000 << " kB" << std::endl;
 
-  std::cout << "Online ms: " << (double)(eval_circuits_nano + decode_keys_nano) / num_iters / 1000000
-            << ", data sent: " << (double)(eval_data_sent + decode_data_sent) / num_iters / 1000 << " kB" << std::endl;
+  std::cout << "Online ms: " << (double) (eval_circuits_nano + decode_keys_nano) / num_iters / 1000000
+            << ", data sent: " << (double) (eval_data_sent + decode_data_sent) / num_iters / 1000 << " kB" << std::endl;
 
   std::cout << "( " << num_iters
-            << ", " << (double)(preprocess_data_sent + prepare_data_sent) / num_iters / 1000
-            << ", " << (double)build_data_sent / num_iters / 1000
-            << ", " << (double)(eval_data_sent + decode_data_sent) / num_iters / 1000 << ")" << std::endl;
-  std::cout << "( " << num_iters
-            << ", " << (double)(preprocess_data_sent + prepare_data_sent + build_data_sent + eval_data_sent + decode_data_sent) / num_iters / 1000 << ")" << std::endl;
+	  << ", " << (double)(preprocess_time_nano + prepare_eval_time_nano) / num_iters / 1000000
+	  << ", " << (double)build_time_nano / num_iters / 1000000
+	  << ", " << (double)(eval_circuits_nano + decode_keys_nano) / num_iters / 1000000 << ")" << std::endl;
 
-  std::cout << "=============================" << std::endl;
+  std::cout << "( " << num_iters
+	  << ", " << (double)(preprocess_time_nano + prepare_eval_time_nano+build_time_nano+eval_circuits_nano + decode_keys_nano) / num_iters / 1000000 << ")" << std::endl;
+
+	  std::cout << "=============================" << std::endl;
+
 }
