@@ -1,0 +1,3 @@
+[submodule "libs/SplitCommit"]
+	path = libs/SplitCommit
+	url = https://github.com/AarhusCrypto/SplitCommit
