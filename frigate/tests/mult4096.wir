@@ -1,0 +1,17 @@
+#define wiresize 4096
+#parties 2
+
+typedef int_t wiresize int
+typedef int_t wiresize*2 lint
+
+#input 1 int
+#output 1 lint
+#input 2 int
+#output 2 lint
+
+function void main()
+{
+lint q = input1 ** input2;
+output1 = q;
+output2 = q;
+}

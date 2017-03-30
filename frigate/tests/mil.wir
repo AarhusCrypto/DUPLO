@@ -1,0 +1,35 @@
+#define MILSIZE 12
+#parties 2
+
+typedef int_t MILSIZE longint
+typedef int_t 1 outputtype
+
+#input 1 longint
+#output 1 outputtype
+#input 2 longint
+#output 2 outputtype
+
+function void main()
+{
+	longint x = input1;
+	longint y = input2;
+
+	output1 = 0;
+	output2 = 0;
+
+	if(x > y)
+	{
+		output1 = 1;
+		output2 = 0;	
+	}
+	else if( y > x)
+	{
+		output1 = 0;
+		output2 = 1;
+	}
+	else 
+	{
+		output1 = 0;
+		output2 = 0;
+	}
+}

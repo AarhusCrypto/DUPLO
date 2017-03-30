@@ -1,0 +1,25 @@
+#define intlength 32
+#parties 2
+
+typedef int_t intlength int
+
+
+#input 1 int
+#output 1 int
+#input 2 int
+#output 2 int
+
+function void main()
+{
+	int x = input1;
+	int y = input2;
+
+    
+    int a[10] = {0,1,2,3,4,5,6,7,8,x};
+
+
+	output1 = a[9];
+	output2 = 0;
+
+    
+}

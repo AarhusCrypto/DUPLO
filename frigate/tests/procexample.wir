@@ -1,0 +1,21 @@
+#parties 2
+
+typedef int_t 32 int
+
+#input 1 int
+#output 1 int
+#input 2 int
+
+
+function void main()
+{
+	int x = input1;
+    int y = input2;
+
+    for(int i=0;i<1000;i++)
+    {
+        x = x + y + y + y + y + y;
+    }
+
+    output1 = x;
+}

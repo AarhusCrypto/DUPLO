@@ -1,0 +1,126 @@
+#define wiresize 1024
+#define loopsize 20000
+#parties 2
+
+typedef int_t wiresize int
+
+typedef struct_t mystruct
+{
+    int x;
+}
+
+typedef struct_t newstruct
+{
+    int x;
+    newstruct var[5];
+}
+
+#input 1 int
+#output 1 int
+#input 2 int
+#output 2 int
+
+
+
+function void main()
+{
+output1 = input1;
+for(int a=0;a<loopsize;a++)
++{
+for(int b=0;b<loopsize;b++)
++{
+for(int c=0;c<loopsize;c++)
++{
+for(int d=0;d<loopsize;d++)
++{
+for(int e=0;e<loopsize;e++)
++{
+for(int f=0;f<loopsize;f++)
++{
+for(int i=0;i<loopsize;i++)
++{
+for(int j=0;j<loopsize;j++)
++{
+for(int a2=0;a2<loopsize;a2++)
++{
+for(int b2=0;b2<loopsize;b2++)
++{
+for(int c2=0;c2<loopsize;c2++)
++{
+for(int d2=0;d2<loopsize;d2++)
++{
+for(int e2=0;e2<loopsize;e2++)
++{
+for(int f2=0;f2<loopsize;f2++)
++{
+for(int i2=0;i2<loopsize;i2++)
++{
+for(int j2=0;j2<loopsize;j2++)
++{
+for(int ba=0;ba<loopsize;ba++)
++{
+for(int bb=0;bb<loopsize;bb++)
++{
+for(int bc=0;bc<loopsize;bc++)
++{
+for(int bd=0;bd<loopsize;bd++)
++{
+for(int be=0;be<loopsize;be++)
++{
+for(int bf=0;bf<loopsize;bf++)
++{
+for(int bi=0;bi<loopsize;bi++)
++{
+for(int bj=0;bj<loopsize;bj++)
++{
+for(int ba2=0;ba2<loopsize;ba2++)
++{
+for(int bb2=0;bb2<loopsize;bb2++)
++{
+for(int bc2=0;bc2<loopsize;bc2++)
++{
+for(int bd2=0;bd2<loopsize;bd2++)
++{
+for(int be2=0;be2<loopsize;be2++)
++{
+for(int bf2=0;bf2<loopsize;bf2++)
++{
+for(int bi2=0;bi2<loopsize;bi2++)
++{
+for(int bj2=0;bj2<loopsize;bj2++)
++{
+output1 = output1 + input1;
+}+
+}+
+}+
+}+
+}+
+}+
+}+
+}+
+}+
+}+
+}+
+}+
+}+
+}+
+}+
+}+
+}+
+}+
+}+
+}+
+}+
+}+
+}+
+}+
+}+
+}+
+}+
+}+
+}+
+}+
+}+
+}+
+
+}

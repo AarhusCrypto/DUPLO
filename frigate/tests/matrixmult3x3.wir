@@ -1,0 +1,58 @@
+#define MATRIXSIZE 2
+#parties 2
+
+typedef int_t 2 int
+
+typedef uint_t MATRIXSIZE sint
+
+typedef struct_t mdata
+{
+int data[MATRIXSIZE][MATRIXSIZE];
+}
+
+#input 1 mdata
+#input 2 mdata
+#output 1 mdata
+#output 2 mdata
+
+function int addAndmult(int a, int x, int y)
+{
+    return a+x*y;
+}
+
+function void main()
+{
+	mdata x = input1;
+	mdata y = input2;
+    
+    int xinput[MATRIXSIZE][MATRIXSIZE];
+    int yinput[MATRIXSIZE][MATRIXSIZE];
+    
+    int result[MATRIXSIZE][MATRIXSIZE];
+
+
+    xinput = x.data;
+    yinput = y.data;
+
+    int t;
+
+
+    for(sint i=0;i<MATRIXSIZE;i++)
+    {
+        for(sint j=0;j<MATRIXSIZE;j++)
+        {
+            t = result[i][j];
+            for(sint k=0;k<MATRIXSIZE;k++)
+            {
+                t = addAndmult(t,xinput[i][k],yinput[k][j]);
+            }
+            result[i][j] = t;
+        }
+    }
+
+
+    x.data = result;
+
+    output1 = x;
+    output2 = x;
+}

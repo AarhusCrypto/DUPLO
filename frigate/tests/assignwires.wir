@@ -1,0 +1,37 @@
+#define wiresize 32
+#parties 2
+
+typedef int_t wiresize*2 longwire
+
+
+#input 1 longwire
+#output 1 longwire
+#input 2 longwire
+#output 2 longwire
+
+
+type var;
+
+function void main()
+{
+    longwire x = input1;
+    longwire y = input2;
+    longwire tmp, tmp2;
+    
+    tmp = input1;
+    tmp2 = input2;
+    
+    x{0:wiresize-1} = tmp2{wiresize:wiresize-1};
+    y{0:wiresize-1} = tmp{wiresize:wiresize-1};
+    
+    x{wiresize:wiresize-1} = tmp2{0:wiresize-1};
+    y{wiresize:wiresize-1} = tmp{0:wiresize-1};    
+
+    output1 = x;
+    output2 = y;
+
+}
+
+
+
+

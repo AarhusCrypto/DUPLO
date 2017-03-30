@@ -1,0 +1,53 @@
+#parties 2
+#define nRound 2  /*NOTE: number rounds */
+#define nAnd 16  /*NOTE: number AND gates =128 x nAnd */
+#define nExec 1024  /*NOTE: number exec */
+
+typedef uint_t 128 u128_t
+
+typedef struct_t pu128_t
+{
+    u128_t a[nExec];
+}
+
+
+#input 1 pu128_t
+#input 2 pu128_t
+#output 1 pu128_t
+#output 2 pu128_t
+
+function u128_t random(u128_t inp1, u128_t inp2)  /*NOTE: fake function; need to use a tag -rand in ./frigate [file] -rand to create random circuits */
+{
+	
+	return inp1;
+}
+
+function u128_t test(u128_t inp1, u128_t inp2)  
+{
+
+u128_t res;
+
+res=random(inp1,inp2);
+
+	
+	for(u128_t i=1;i<nAnd;i++) /*parallel*/
+	{
+	   res=random(res,inp2);
+	}
+	return res;
+	
+}
+
+function void main()
+{		
+	u128_t res[nExec][nRound];
+	 for(u128_t e=0;e<nExec;e++) /*parallel*/
+	 {
+		res[e][0]=test(input1.a[e],input2.a[e]);	
+		 for(u128_t r=1;r<nRound-1;r++) /*round*/
+		{				 			
+			res[e][r]=test(res[e][r-1],input2.a[e]);	
+		}
+		output1.a[e]=test(input1.a[e],res[e][nRound-1]);
+	}
+}

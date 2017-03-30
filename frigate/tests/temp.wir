@@ -1,0 +1,15 @@
+#define wiresize 4
+#parties 2
+
+typedef uint_t wiresize int
+
+#input 1 int
+#input 2 int
+#output 1 int
+
+function void main()
+{
+int result = 15;
+output1 = result;
+       
+}

@@ -1,0 +1,56 @@
+#define wiresize 65536
+#define countersize 17 /* enough to count up to wiresize, unsigned*/
+#define iterations (wiresize/32)-1
+
+#parties 2
+
+typedef uint_t wiresize value_int
+typedef uint_t countersize counter_int
+typedef uint_t 32 int32
+
+#input 1 value_int
+#input 2 value_int
+#output 1 counter_int
+
+
+typedef struct_t returntype
+{
+    value_int h;
+    counter_int d;
+}
+
+function returntype getXOR(value_int a, value_int b)
+{
+   returntype tr;
+   tr.h=a^b;
+   tr.d=0;
+   return tr;
+}
+
+
+function counter_int getHam32(int32 hamm32,counter_int dist) {
+
+   int32 x = hamm32 - ((hamm32 >> 1) & 1431655765); /* 0x55555555 */
+   x = (x & 858993459) + ((x >> 2) & 858993459); /* 0x33333333 */
+   x = (x + (x >> 4)) & 252645135; /* 0x0f0f0f0f */
+   x = x + (x >> 8);
+   x = x + (x >> 16);
+   x= x & 63;
+   dist=dist+x{0:countersize};
+
+ return dist;
+}
+
+
+function void main()
+{
+   returntype hamming;
+   hamming= getXOR(input1,input2);
+
+   for(counter_int i=0; i<iterations; i++) /* wiresize / 32 */
+   {
+      hamming.d=getHam32(hamming.h{i*32:32},hamming.d);
+   }
+  output1 = getHam32(hamming.h{(iterations)*32:32},hamming.d);
+
+}

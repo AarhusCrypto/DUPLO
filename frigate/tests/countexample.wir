@@ -1,0 +1,27 @@
+#define wiresize 1024
+#parties 2
+
+typedef int_t wiresize int
+
+#input 1 int #output 1 int #input 2 int #output 2 int
+
+function int mul(int x, int y)
+{
+    return x * y;
+}
+
+function void main()
+{
+
+    int t = input1;
+
+    for(int i=0;i<256;i++)
+    {
+        t = mul(t,input1);
+    }
+    {
+        t = t*input1;
+    }
+
+    output1 = input1 * input2+t;
+}

@@ -1,0 +1,6 @@
+#define includ12 32
+#define includ22 32
+#define includ32 32
+#define includ42 32
+
+typedef int_t 32 int

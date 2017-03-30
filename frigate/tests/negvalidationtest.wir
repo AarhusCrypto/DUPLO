@@ -1,0 +1,373 @@
+/*negative validation testing
+
+--
+
+Many of the tests are commented out as the errors halt the compilation - currently this is setup to see the typechecking errors. Errors can also happen during include, type creation, syntax errors, and runtime errors
+
+*/
+
+
+#define testsize 32
+#define numtests 3722
+#parties 2
+
+typedef int_t 1 bool
+typedef int_t 4 short
+typedef int_t 8 shortx2
+typedef int_t 16 shortx3
+typedef int_t testsize int
+typedef int_t testsize int2
+typedef int_t numtests resultint
+
+#input 1 int
+#output 1 resultint
+#input 2 teststruct2
+#output 2 teststruct2
+
+#include "includetest2.wir"
+
+/*negative include test*/
+/*
+#include "includetest45.wir"
+*/
+
+function int makeUnknown(int param)
+{
+    return param;
+}
+
+function short makeUnknown4(short param)
+{
+return param;
+}
+
+function shortx2 makeUnknownShortx2(shortx2 param)
+{
+    return param;
+}
+
+function bool makeBoolUnknown(bool b)
+{
+return b;
+}
+
+function void main()
+{
+    int actualint;
+int actualint;
+int actualint;
+    short val = 10;
+    val = makeUnknown4(val);
+
+/* typechecking errors */
+    input3 = val;
+    type t;
+    int a[8] = {actualint,2,3,4,5,6,7};
+fparameter1(a);
+fparameter2(a);
+fparameter3(a);
+fparameter4();
+fparameter5();
+fparameter6();
+fparameter7();
+fparameter8();
+result = val + a;
+result = actualint + val;
+actualint[val];
+actualint{0:val};
+teststruct1 a2; teststruct2 b = a2;
+a2 = b;
+int zzz[5],ppp[6],qqq[val];
+zzz = ppp;
+/* circuit output errors */
+/*actualint{val};*/
+
+
+
+
+    /*should only issue a warning*/
+    int2 i;
+    int2 k = makeUnknown(i);
+    k = makeUnknown(i);
+    int x[4] = {0,1,2,i};
+    int zzzz[5]; int2 pppp[5]; zzzz = pppp;
+}
+
+
+
+/*functions
+
+a. different parameters
+b. return types
+c. if modifying in function carries over to where it is returned
+*/
+
+
+function int fparameter1(teststruct2 k, int xp)
+{
+int x;
+x = makeUnknown(x);
+x = x + xp + 1;
+return x;
+}
+function teststruct2 fparameter2(teststruct2 k, int xp[2])
+{
+int x;
+x = makeUnknown(x);
+x++;
+
+k.varx = 5+ xp[0]{0:4};
+
+return k;
+}
+function teststruct2[2] fparameter3(teststruct2 k[2], int xp)
+{
+int x;
+x = makeUnknown(x);
+x++;
+
+k[0].varx = 5;
+
+return k;
+}
+function int[2] fparameter4(teststruct2 k[2], int xp[2])
+{
+int x;
+x = makeUnknown(x);
+x++;
+xp[0] = 6+xp[0];
+return xp;
+}
+
+function void emptyfunction()
+{
+
+}
+
+
+function teststruct2 fparameter5(int k, teststruct2 xp)
+{
+int x;
+x = makeUnknown(x);
+x++;
+
+xp.varx = 7;
+
+return xp;
+}
+function int fparameter6(int k, teststruct2 xp[2])
+{
+int x;
+x = makeUnknown(x);
+x++;
+
+k=7+k;
+
+return k;
+}
+function int[2] fparameter7(int k[2], teststruct2 xp)
+{
+int x;
+x = makeUnknown(x);
+x++;
+
+k[0] = 7;
+
+return k;
+}
+function teststruct2[2] fparameter8(int k[2], teststruct2 xp[2])
+{
+int x;
+x = makeUnknown(x);
+x++;
+
+xp[0].varx = 7;
+
+return xp;
+}
+
+
+
+function short[5] testreturn(short temp[5][5][5])
+{
+return temp[3][3];
+}
+
+
+
+function teststruct2 makeUnknownS(teststruct2 k)
+{
+    return k;
+}
+
+
+
+function teststruct1 makeUnknownS1(teststruct1 k)
+{
+    return k;
+}
+
+
+
+typedef int_t 409680 ffxbhhts
+typedef int_t 435272 kvgcvnwv
+typedef int_t 216004 orgplhfq
+typedef int_t 520227 jandntjx
+typedef int_t 353944 uefwxken
+typedef int_t 532653 sykwbmsj
+typedef int_t 127456 yshzfvva
+typedef int_t 160606 havalluc
+typedef int_t 678235 ndoetucw
+typedef int_t 821256 agorfnys
+typedef int_t 422009 htzizpxr
+typedef int_t 305831 usnafjqp
+typedef int_t 788313 tdtgqxbl
+typedef int_t 890032 jufhpyxm
+typedef int_t 723818 lkbpqmha
+typedef int_t 35426 lplwrgqc
+typedef int_t 954651 unzbyunv
+typedef int_t 65988 gbkmcjcz
+typedef int_t 651830 ptpggotv
+typedef int_t 344766 xqdkksqn
+typedef int_t 19331 raprefwk
+typedef int_t 772823 pivviywp
+typedef int_t 658033 ccrehllf
+typedef int_t 752236 rfzrslrw
+typedef int_t 538687 aofsstua
+typedef int_t 946488 dnrqvrcj
+typedef int_t 243517 fwgxvqyi
+typedef int_t 476091 ktfhlkee
+typedef int_t 761304 trtjspwy
+typedef int_t 757532 gopfhitc
+typedef int_t 885618 tmdwoopj
+typedef int_t 665554 fhhhbged
+typedef int_t 725479 vtgyfhdo
+typedef int_t 199274 ofxzscxe
+typedef int_t 2263 kbfajjxq
+typedef int_t 137033 ehlvujvg
+typedef int_t 83686 hjxlxlvh
+typedef int_t 606115 nnipefog
+typedef int_t 923597 pzpglrex
+typedef int_t 208356 ccvegbft
+typedef int_t 438244 bzjmhloq
+typedef int_t 413229 rzhnjdoo
+typedef int_t 745868 jqhfwdng
+typedef int_t 39980 uspqwiit
+typedef int_t 698770 hdrisogv
+typedef int_t 646010 nswdkfxd
+typedef int_t 336772 xwufsrxc
+typedef int_t 756012 vdpuwlvw
+typedef int_t 363387 phtfxzby
+typedef int_t 603033 vwcmjlyz
+typedef int_t 74597 wermpwgg
+typedef int_t 42053 ifbgifkl
+typedef int_t 363473 awozvoir
+typedef int_t 284377 ydaoenpb
+typedef int_t 684410 ixwpssmm
+typedef int_t 654382 hkodyknp
+typedef int_t 606050 fmbfehlk
+typedef int_t 422358 hgcvhvsf
+typedef int_t 364848 uenkflak
+typedef int_t 773132 tksokole
+typedef int_t 585194 yoqablxb
+typedef int_t 67041 qebcibur
+typedef int_t 173877 jqjpdmpj
+typedef int_t 869098 nkvmpemi
+typedef int_t 857217 pwahyoum
+typedef int_t 975504 owqxytjt
+typedef int_t 442492 oxgxmgzw
+typedef int_t 976021 qdcsdhwf
+typedef int_t 233973 vwvnlycw
+typedef int_t 514207 kwqxbxyv
+typedef int_t 731292 ytmwmjih
+typedef int_t 718039 vzedcrqz
+typedef int_t 111090 wwahemag
+typedef int_t 910785 xalwtynv
+typedef int_t 504408 fovnityk
+typedef int_t 790414 aqrowmim
+typedef int_t 189406 cliqahyi
+typedef int_t 575367 wdezajsl
+typedef int_t 603002 ozjzdhrv
+typedef int_t 192360 ssycpwkk
+typedef int_t 718209 qpnpzhkr
+typedef int_t 21484 ckmijfrp
+typedef int_t 560152 gzonhfdf
+typedef int_t 303229 ivwmswtz
+typedef int_t 2786 uklrcwku
+typedef int_t 877754 mxluonel
+typedef int_t 286392 mrgvhuwc
+typedef int_t 628552 dfwmtfnh
+typedef int_t 974829 nutuefif
+typedef int_t 69853 yqsesqxv
+typedef int_t 712080 fhrvjopr
+typedef int_t 603587 ydfxgbul
+typedef int_t 534735 zafjwunp
+typedef int_t 376579 fgqbmemo
+typedef int_t 24166 yffcavqy
+typedef int_t 207775 zcnvpuwk
+typedef int_t 263844 dddkpoay
+typedef int_t 759148 okzkhacc
+typedef int_t 928214 xvtxqios
+typedef int_t 629405 vyyxajms
+
+
+typedef struct_t depth3strcut
+{
+    short varx;
+    short vary;
+    short varz;
+}
+
+typedef struct_t teststruct1
+{
+    depth3strcut tt;
+    short varx;
+    short vary;
+    short varz;
+    short amember[5][2];
+}
+
+typedef struct_t teststruct2
+{
+    teststruct1 tvarx;
+    teststruct1 tvary[5][2];
+    teststruct1 tvarz;
+    short varx;
+    short vary;
+    short varz;
+    short amember[5];
+}
+
+/* incorrect struct type error */
+/*
+typedef struct_t teststruct3
+{
+teststruct1 tvarx;
+teststruct1 tvary[5][2];
+teststruct1 tvarz;
+shordt varx;
+short vary;
+short varz;
+short amember[5];
+}
+*/
+
+
+/*recursive struct*/
+/*
+typedef struct_t teststruct4
+{
+teststruct4 x;
+}
+*/
+
+
+
+
+
+
+
+
+
+
+

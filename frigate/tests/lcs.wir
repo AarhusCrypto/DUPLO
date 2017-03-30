@@ -1,0 +1,42 @@
+
+#define inputsize 12
+#define wiresize 8
+#parties 2
+
+typedef uint_t wiresize int
+typedef uint_t wiresize*inputsize inputsizeT
+
+
+#input 1 inputsizeT
+#output 1 int
+#input 2 inputsizeT
+#output 2 int
+
+function void main()
+{
+
+	
+	int LCSuff[inputsize+1][inputsize+1];
+
+	int result=0;
+
+	for(int i=0;i<inputsize;i++)
+	{
+		for(int j=0;j<inputsize;j++)
+		{
+			LCSuff[i][j] = 0;
+			if(i == 0 | j == 0)
+			{
+				LCSuff[i][j]=0;
+			}
+			else if(input1{(i-1)*wiresize:wiresize} == input2{(j-1)*wiresize:wiresize})
+			{
+				LCSuff[i][j] = LCSuff[i-1][j-1] + 1;
+				if(LCSuff[i][j] > result)
+					result = LCSuff[i][j];						
+			}		
+		}
+	}
+	output1 = result;
+	output2 = result;
+}

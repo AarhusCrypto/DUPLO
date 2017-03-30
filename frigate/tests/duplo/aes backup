@@ -1,0 +1,103 @@
+#define wiresize 128
+#parties 2
+
+typedef uint_t 8 uint8_t
+
+#input 1 uint8_t
+#input 2 uint8_t
+#output 1 uint8_t
+
+
+
+function uint8_t gf_mulinv(uint8_t x)  /* calculate multiplicative inverse*/
+{
+
+	uint8_t rs;
+
+	if(x==0){
+		rs= x;
+	}
+	else
+	{
+		rs= 0;
+	}
+	return rs;
+
+} /* gf_mulinv */
+
+function uint8_t rj_sbox(uint8_t x)
+{  
+	 uint8_t y;
+	 uint8_t sb;
+
+	 sb = gf_mulinv(x);
+	 y = gf_mulinv(x);
+
+         y = (y<<1)|(y>>7);   sb = sb^y;  y = (y<<1)|(y>>7);   sb = sb^y; 
+         y = (y<<1)|(y>>7);   sb = sb^y;   y = (y<<1)|(y>>7);  sb = sb^y;
+
+    return (sb ^ 99);
+} 
+
+function void main()
+{
+output1=rj_sbox(input1);
+}
+
+#define wiresize 128
+#parties 2
+#define max_uint_t 255
+
+
+typedef uint_t 8 uint8_t
+
+#input 1 uint8_t
+#input 2 uint8_t
+#output 1 uint8_t
+
+
+
+function uint8_t gf_mulinv(uint8_t x)  /* calculate multiplicative inverse*/
+{
+
+	uint8_t rs;
+
+	if(x==0){
+
+		uint8_t atb = 1;  uint8_t i = 0; uint8_t z;
+
+		for(uint8_t j=0;j<max_uint_t;j++)
+		{
+
+		}
+
+		rs= x;
+	}
+	else
+	{
+		rs= 0;
+	}
+	return rs;
+
+} /* gf_mulinv */
+
+function uint8_t rj_sbox(uint8_t x)
+{  
+	 uint8_t y;
+	 uint8_t sb;
+
+	 sb = gf_mulinv(x);
+	 y = gf_mulinv(x);
+
+         y = (y<<1)|(y>>7);   sb = sb^y;  y = (y<<1)|(y>>7);   sb = sb^y; 
+         y = (y<<1)|(y>>7);   sb = sb^y;   y = (y<<1)|(y>>7);  sb = sb^y;
+
+    return (sb ^ 99);
+} 
+
+function void main()
+{
+
+
+output1=rj_sbox(input1);
+}

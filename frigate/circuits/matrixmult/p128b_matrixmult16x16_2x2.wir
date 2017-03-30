@@ -1,0 +1,110 @@
+#define MATRIX_SIZE 16
+#define BLOCKSIZE 2
+#define NUM_ROW_BLOCK MATRIX_SIZE/BLOCKSIZE 
+#define NUM_COLM_BLOCK MATRIX_SIZE/BLOCKSIZE   /* input wire in total = NUM_COLM_BLOCK x NUM_ROW_BLOCK x BLOCKSIZE x BLOCKSIZE x ENTRYSIZE*/
+
+
+#define Np 128 /*parallel*/
+
+#define WIRESIZE 32
+
+#parties 2
+
+
+typedef int_t WIRESIZE int
+
+typedef uint_t WIRESIZE sint
+
+typedef struct_t mbdata
+{
+int data[BLOCKSIZE][BLOCKSIZE];
+}
+
+typedef struct_t mdata
+{
+mbdata data[NUM_ROW_BLOCK][NUM_ROW_BLOCK];
+}
+
+typedef struct_t pmdata
+{
+mdata data[Np];
+}
+
+#input 1 pmdata
+#input 2 pmdata
+#output 1 pmdata
+
+function int addAndmult(int a, int x, int y) /* x*y => (128*127+1) AND ; a+ => 127; total = 16384 AND gates*/
+{
+    return a+x*y; 
+}
+
+function mbdata multi2BlockMatrix(mbdata blockX, mbdata blockY)
+{   
+    
+    mbdata result;
+
+    int t;
+	
+
+    for(sint i=0;i<BLOCKSIZE;i++)
+    {
+        for(sint j=0;j<BLOCKSIZE;j++)
+        {
+			t=0;
+            for(sint k=0;k<BLOCKSIZE;k++)
+            {
+              t = addAndmult(t,blockX.data[i][k],blockY.data[k][j]);
+            }
+            result.data[i][j] = t;
+        }
+    }
+
+   return result;
+}
+
+function mbdata add2BlockMatrix(mbdata blockX, mbdata blockY)
+{   
+    
+    mbdata result;
+
+    for(sint i=0;i<BLOCKSIZE;i++)
+    {
+        for(sint j=0;j<BLOCKSIZE;j++)
+        {
+           result.data[i][j] = blockX.data[i][j]+blockY.data[i][j];
+        }
+    }
+
+   return result;
+}
+
+
+
+function void main()
+{
+
+	mbdata mult1;
+	mbdata mult2;
+	
+	 for(int p=0;p<Np;p++)
+    {
+	
+	
+     for(sint i=0;i<NUM_COLM_BLOCK;i++)
+    {
+        for(sint j=0;j<NUM_COLM_BLOCK;j++)
+        {
+			mult1 = multi2BlockMatrix(input1.data[p].data[i][0],input2.data[p].data[0][j]); 
+            for(sint k=1;k<NUM_COLM_BLOCK-1;k++)
+            {
+				mult2 = multi2BlockMatrix(input1.data[p].data[i][k],input2.data[p].data[k][j]); 
+				mult1 = add2BlockMatrix(mult1,mult2);   				
+			}			
+			mult2 = multi2BlockMatrix(input1.data[p].data[i][NUM_COLM_BLOCK-1],input2.data[p].data[NUM_COLM_BLOCK-1][j]);
+			
+			output1.data[p].data[i][j]=add2BlockMatrix(mult1,mult2);
+		}
+    }	
+	}
+}

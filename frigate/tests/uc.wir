@@ -1,0 +1,116 @@
+#define addrsize 16
+#define ttsize 4
+#define gatecount 5
+#define numinputs 100
+#define numoutputs 100
+#define poolsize numinputs + 500
+
+#parties 2
+
+typedef uint_t addrsize addrtype
+typedef uint_t numinputs inputtype
+typedef uint_t numoutputs outputtype
+typedef uint_t ttsize tttype
+typedef uint_t 1 bool
+typedef uint_t 2 ttnumt
+
+typedef struct_t program
+{
+    addrtype x[gatecount];
+    addrtype y[gatecount];
+    tttype tt[gatecount];
+    addrtype d[gatecount];
+
+    addrtype output[numoutputs];
+}
+
+
+#input 1 program
+#input 2 inputtype
+#output 1 addrtype
+#output 2 outputtype
+
+function void main()
+{
+    bool destinations[poolsize];
+outputtype outputs;
+
+    for(addrtype i=0;i<numinputs;i++)
+    {
+        destinations[i] = input2{i};
+    }
+
+    for(addrtype i=0;i<gatecount;i++)
+    {
+        addrtype xad = input1.x[i], yad = input1.y[i], dad = input1.d[i];
+
+tttype truth = input1.tt[i];
+
+        +{
+            bool x,y;
+
+            for(addrtype j=0;j<poolsize;j++)
+            {
+                if(xad{0:10} == j{0:10})
+                {
+                    x = destinations[j];
+                }
+                if(yad{0:10} == j{0:10})
+                {
+                    y = destinations[j];
+                }
+            }
+
+
+            ttnumt ttnum;
+            ttnum{0} = y;
+            ttnum{1} = x;
+
+            bool res;
+
+            if(ttnum == 0)
+            {
+                res = truth{0};
+            }
+            if(ttnum == 1)
+            {
+                res = truth{1};
+            }
+            if(ttnum == 2)
+            {
+                res = truth{2};
+            }
+            if(ttnum == 3)
+            {
+                res = truth{3};
+            }
+
+            for(addrtype j=0;j<poolsize;j++)
+            {
+                if(dad{0:10} == j{0:10})
+                {
+                    destinations[j] = res;
+                }
+            }
+        }+
+    }
+
+    for(addrtype i=0;i<numoutputs;i++)
+    {
+        for(addrtype j=0;j<poolsize;j++)
+        {
+            if(input1.output[i]{0:10} == j{0:10})
+            {
+                outputs{i} = destinations[j];
+            }
+        }
+    }
+
+output2 = outputs;
+}
+
+
+
+
+
+

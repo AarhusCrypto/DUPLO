@@ -1,0 +1,28 @@
+#parties 2
+
+typedef int_t 8 char16
+typedef int_t 8 charx
+
+#input 1 char16
+#output 1 char16
+#input 2 char16
+
+
+function void main()
+{
+    for(char16 i=0,k=0; i<5;i++)
+    {
+
+        for(char16 j=0;j< 2;j++)
+        {
+            char16 adder = 0; /*on second time though loop j, adder may no longer at the same location*/
+            adder = input1;
+
+            +{ /*Procedure Def*/ /*but this procedure will not be regenerated*/
+                adder=adder + 1;
+            }+
+
+            output1= output1 + adder;
+        }
+    }
+}
