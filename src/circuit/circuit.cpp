@@ -44,306 +44,183 @@ void AddOutputIdentityGates(Circuit& circuit) {
   }
 }
 
-void ParseGates(Circuit& circuit, char raw_circuit[], char terminate_char) {
+void ParseGates(Circuit& circuit, char raw_circuit[], CIRCUIT_TYPE circuit_type) {
   uint32_t left_wire_idx, right_wire_idx, out_wire_idx;
 
-  while (*raw_circuit != terminate_char) {
-    if (*raw_circuit == '\n') {
-      raw_circuit = strchr(raw_circuit, '\n') + 1;
-      continue;
-    }
-    
-    left_wire_idx = (uint32_t) atoi(raw_circuit);
-    
-    raw_circuit = strchr(raw_circuit,  ' ') + 1;
-    right_wire_idx = (uint32_t) atoi(raw_circuit);
-    
-    raw_circuit = strchr(raw_circuit,  ' ') + 1;
-    out_wire_idx = (uint32_t) atoi(raw_circuit);
-
-    raw_circuit = strchr(raw_circuit,  ' ') + 1;
-    circuit.gates.emplace_back(Gate(std::string(raw_circuit, 4)));
-    circuit.gates[circuit.num_gates].left_wire = left_wire_idx;
-    circuit.gates[circuit.num_gates].right_wire = right_wire_idx;
-    circuit.gates[circuit.num_gates].out_wire = out_wire_idx;
-
-    if (circuit.gates[circuit.num_gates].parity) {
-      ++circuit.num_non_free_gates;
-    }
-    ++circuit.num_gates;
-
-    raw_circuit = strchr(raw_circuit,  '\n') + 1;
+  char terminate_char;
+  if (circuit_type == COMPOSED) {
+    terminate_char = '-';
+  } else if (circuit_type == BRISTOL) {
+    terminate_char = EOF;
   }
-}
-
-void ParseBristolGates(Circuit& circuit, char raw_circuit[], char terminate_char) {
-  uint32_t num_inputs, left_wire_idx, right_wire_idx, out_wire_idx;
-  char type[4];
 
   while (*raw_circuit != terminate_char) {
     if (*raw_circuit == '\n') {
       raw_circuit = strchr(raw_circuit, '\n') + 1;
       continue;
     }
-    num_inputs = (uint32_t) atoi(raw_circuit);
-    raw_circuit = strchr(raw_circuit,  ' ') + 1;
-    raw_circuit = strchr(raw_circuit,  ' ') + 1; //We skip num_output wires as they all have 1.
-
-    if (num_inputs == 1) {
+    if (circuit_type == COMPOSED) {
       left_wire_idx = (uint32_t) atoi(raw_circuit);
-      raw_circuit = strchr(raw_circuit,  ' ') + 1;
-      out_wire_idx = (uint32_t) atoi(raw_circuit);
-      raw_circuit = strchr(raw_circuit,  ' ') + 1;
-      raw_circuit = strchr(raw_circuit,  '\n') + 1;
-      circuit.gates.emplace_back(Gate(gate_tables[3]));
-      circuit.gates[circuit.num_gates].left_wire = left_wire_idx;
-      circuit.gates[circuit.num_gates].right_wire = 0;
-      circuit.gates[circuit.num_gates].out_wire = out_wire_idx;
 
-      ++circuit.num_gates;
-    } else {
-      left_wire_idx = (uint32_t) atoi(raw_circuit);
       raw_circuit = strchr(raw_circuit,  ' ') + 1;
       right_wire_idx = (uint32_t) atoi(raw_circuit);
+
       raw_circuit = strchr(raw_circuit,  ' ') + 1;
       out_wire_idx = (uint32_t) atoi(raw_circuit);
 
       raw_circuit = strchr(raw_circuit,  ' ') + 1;
+      circuit.gates.emplace_back(Gate(std::string(raw_circuit, 4)));
+      circuit.gates[circuit.num_gates].left_wire = left_wire_idx;
+      circuit.gates[circuit.num_gates].right_wire = right_wire_idx;
+      circuit.gates[circuit.num_gates].out_wire = out_wire_idx;
 
-      memcpy(type, raw_circuit, 4 * sizeof(char));
-      std::string type_string(type);
+      if (circuit.gates[circuit.num_gates].parity) {
+        ++circuit.num_non_free_gates;
+      }
+      ++circuit.num_gates;
+
       raw_circuit = strchr(raw_circuit,  '\n') + 1;
+    } else if (circuit_type == BRISTOL) {
+      
+      char type[4];
 
-      //Do not change the order of these if statements, they matter as eg. AND is substring of NAND
-      if (type_string.find("NAND") != std::string::npos) {
-        circuit.gates.emplace_back(Gate(gate_tables[7]));
+      uint32_t num_inputs = (uint32_t) atoi(raw_circuit);
+      raw_circuit = strchr(raw_circuit,  ' ') + 1;
+      raw_circuit = strchr(raw_circuit,  ' ') + 1; //We skip num_output wires as they all have 1.
+
+      if (num_inputs == 1) {
+        left_wire_idx = (uint32_t) atoi(raw_circuit);
+        raw_circuit = strchr(raw_circuit,  ' ') + 1;
+        out_wire_idx = (uint32_t) atoi(raw_circuit);
+        raw_circuit = strchr(raw_circuit,  ' ') + 1;
+        raw_circuit = strchr(raw_circuit,  '\n') + 1;
+        circuit.gates.emplace_back(Gate(gate_tables[3]));
         circuit.gates[circuit.num_gates].left_wire = left_wire_idx;
-        circuit.gates[circuit.num_gates].right_wire = right_wire_idx;
+        circuit.gates[circuit.num_gates].right_wire = 0;
         circuit.gates[circuit.num_gates].out_wire = out_wire_idx;
 
         ++circuit.num_gates;
-        ++circuit.num_non_free_gates;
-      } else if (type_string.find("AND") != std::string::npos) {
-        circuit.gates.emplace_back(gate_tables[8]);
-        circuit.gates[circuit.num_gates].left_wire = left_wire_idx;
-        circuit.gates[circuit.num_gates].right_wire = right_wire_idx;
-        circuit.gates[circuit.num_gates].out_wire = out_wire_idx;
-
-        ++circuit.num_gates;
-        ++circuit.num_non_free_gates;
-      } else if ((type_string.find("NXOR") != std::string::npos) ||
-                 (type_string.find("XNOR") != std::string::npos)) {
-        circuit.gates.emplace_back(Gate(gate_tables[9]));
-        circuit.gates[circuit.num_gates].left_wire = left_wire_idx;
-        circuit.gates[circuit.num_gates].right_wire = right_wire_idx;
-        circuit.gates[circuit.num_gates].out_wire = out_wire_idx;
-
-        ++circuit.num_gates;
-      } else if (type_string.find("XOR") != std::string::npos) {
-        circuit.gates.emplace_back(Gate(gate_tables[6]));
-        circuit.gates[circuit.num_gates].left_wire = left_wire_idx;
-        circuit.gates[circuit.num_gates].right_wire = right_wire_idx;
-        circuit.gates[circuit.num_gates].out_wire = out_wire_idx;
-
-        ++circuit.num_gates;
-      } else if (type_string.find("NOR") != std::string::npos) {
-        circuit.gates.emplace_back(Gate(gate_tables[1]));
-        circuit.gates[circuit.num_gates].left_wire = left_wire_idx;
-        circuit.gates[circuit.num_gates].right_wire = right_wire_idx;
-        circuit.gates[circuit.num_gates].out_wire = out_wire_idx;
-
-        ++circuit.num_gates;
-        ++circuit.num_non_free_gates;
-      } else if (type_string.find("OR") != std::string::npos) {
-        circuit.gates.emplace_back(Gate(gate_tables[14]));
-        circuit.gates[circuit.num_gates].left_wire = left_wire_idx;
-        circuit.gates[circuit.num_gates].right_wire = right_wire_idx;
-        circuit.gates[circuit.num_gates].out_wire = out_wire_idx;
-
-        ++circuit.num_gates;
-        ++circuit.num_non_free_gates;
       } else {
-        std::cout << "cannot parse gate of type: " << type_string << std::endl;
-        exit(EXIT_FAILURE);
+        left_wire_idx = (uint32_t) atoi(raw_circuit);
+        raw_circuit = strchr(raw_circuit,  ' ') + 1;
+        right_wire_idx = (uint32_t) atoi(raw_circuit);
+        raw_circuit = strchr(raw_circuit,  ' ') + 1;
+        out_wire_idx = (uint32_t) atoi(raw_circuit);
+
+        raw_circuit = strchr(raw_circuit,  ' ') + 1;
+
+        memcpy(type, raw_circuit, 4 * sizeof(char));
+        std::string type_string(type);
+        raw_circuit = strchr(raw_circuit,  '\n') + 1;
+
+        //Do not change the order of these if statements, they matter as eg. AND is substring of NAND
+        if (type_string.find("NAND") != std::string::npos) {
+          circuit.gates.emplace_back(Gate(gate_tables[7]));
+          circuit.gates[circuit.num_gates].left_wire = left_wire_idx;
+          circuit.gates[circuit.num_gates].right_wire = right_wire_idx;
+          circuit.gates[circuit.num_gates].out_wire = out_wire_idx;
+
+          ++circuit.num_gates;
+          ++circuit.num_non_free_gates;
+        } else if (type_string.find("AND") != std::string::npos) {
+          circuit.gates.emplace_back(gate_tables[8]);
+          circuit.gates[circuit.num_gates].left_wire = left_wire_idx;
+          circuit.gates[circuit.num_gates].right_wire = right_wire_idx;
+          circuit.gates[circuit.num_gates].out_wire = out_wire_idx;
+
+          ++circuit.num_gates;
+          ++circuit.num_non_free_gates;
+        } else if ((type_string.find("NXOR") != std::string::npos) ||
+                   (type_string.find("XNOR") != std::string::npos)) {
+          circuit.gates.emplace_back(Gate(gate_tables[9]));
+          circuit.gates[circuit.num_gates].left_wire = left_wire_idx;
+          circuit.gates[circuit.num_gates].right_wire = right_wire_idx;
+          circuit.gates[circuit.num_gates].out_wire = out_wire_idx;
+
+          ++circuit.num_gates;
+        } else if (type_string.find("XOR") != std::string::npos) {
+          circuit.gates.emplace_back(Gate(gate_tables[6]));
+          circuit.gates[circuit.num_gates].left_wire = left_wire_idx;
+          circuit.gates[circuit.num_gates].right_wire = right_wire_idx;
+          circuit.gates[circuit.num_gates].out_wire = out_wire_idx;
+
+          ++circuit.num_gates;
+        } else if (type_string.find("NOR") != std::string::npos) {
+          circuit.gates.emplace_back(Gate(gate_tables[1]));
+          circuit.gates[circuit.num_gates].left_wire = left_wire_idx;
+          circuit.gates[circuit.num_gates].right_wire = right_wire_idx;
+          circuit.gates[circuit.num_gates].out_wire = out_wire_idx;
+
+          ++circuit.num_gates;
+          ++circuit.num_non_free_gates;
+        } else if (type_string.find("OR") != std::string::npos) {
+          circuit.gates.emplace_back(Gate(gate_tables[14]));
+          circuit.gates[circuit.num_gates].left_wire = left_wire_idx;
+          circuit.gates[circuit.num_gates].right_wire = right_wire_idx;
+          circuit.gates[circuit.num_gates].out_wire = out_wire_idx;
+
+          ++circuit.num_gates;
+          ++circuit.num_non_free_gates;
+        } else {
+          std::cout << "cannot parse gate of type: " << type_string << std::endl;
+          exit(EXIT_FAILURE);
+        }
       }
     }
   }
 }
 
 //Parse the gate description given a char array of the description file.
-Circuit ParseCircuit(char raw_circuit[]) {
+Circuit ParseCircuit(char raw_circuit[], CIRCUIT_TYPE circuit_type, std::string prefix) {
   Circuit circuit;
-  raw_circuit = strchr(raw_circuit, ' ') + 1; //we dont need num_gates
-  circuit.num_wires = (uint32_t) atoi(raw_circuit);
 
-  raw_circuit = strchr(raw_circuit, ' ') + 1;
-  circuit.out_wires_start = (uint32_t) atoi(raw_circuit);
-  raw_circuit = strchr(raw_circuit,  '\n') + 1; //Skip to next line
+  if (circuit_type == COMPOSED) {
+    raw_circuit = strchr(raw_circuit, ' ') + 1; //skip FN
+    circuit.composed_index = (uint32_t) atoi(raw_circuit) - 1;
 
-  circuit.num_const_inp_wires = (uint32_t) atoi(raw_circuit);
-  raw_circuit = strchr(raw_circuit, ' ') + 1;
-  circuit.num_eval_inp_wires = (uint32_t) atoi(raw_circuit);
+    circuit.circuit_name = prefix + "_" + std::to_string(circuit.composed_index);
 
+    raw_circuit = strchr(raw_circuit, ' ') + 1; //#number num_inp_wires
+    circuit.num_eval_inp_wires = (uint32_t) atoi(raw_circuit);
+    circuit.num_const_inp_wires = 0;
+    //Will make circuit.num_inp_wires values have the same value
+    //All intermediate circuits are interpreted as eval party owns all input wires.
 
-  raw_circuit = strchr(raw_circuit, ' ') + 1;
-  circuit.num_out_wires = (uint32_t) atoi(raw_circuit);
-  raw_circuit = strchr(raw_circuit, ' ') + 1;
-  circuit.num_const_out_wires = (uint32_t) atoi(raw_circuit);
-  raw_circuit = strchr(raw_circuit, ' ') + 1;
-  circuit.num_eval_out_wires = (uint32_t) atoi(raw_circuit);
+    circuit.out_wires_start = circuit.num_eval_inp_wires;
 
-  raw_circuit = strchr(raw_circuit,  '\n') + 1; //Skip to next line
-  raw_circuit = strchr(raw_circuit,  '\n') + 1; //Skip to next line
-
-  circuit.num_gates = 0;
-  circuit.num_non_free_gates = 0;
-
-  /*cout << circuit.num_wires << " "
-    << circuit.out_wires_start << " "
-    << circuit.num_const_inp_wires << " "
-    << circuit.num_eval_inp_wires << " "
-    << circuit.num_out_wires << " "
-    << circuit.num_const_out_wires << " "
-    << circuit.num_eval_out_wires << "\n";*/
-
-  ParseGates(circuit, raw_circuit, EOF);
-
-  SetCircuitOffsetIndices(circuit);
-  AddOutputIdentityGates(circuit);
-
-  return circuit;
-}
-
-//Parse the gate description given a char array of the description file.
-Circuit ParseBristolCircuit(char raw_circuit[]) {
-  Circuit circuit;
-  raw_circuit = strchr(raw_circuit, ' ') + 1; //we dont need num_gates
-  circuit.num_wires = (uint32_t) atoi(raw_circuit);
-
-  raw_circuit = strchr(raw_circuit, '\n') + 1; //Skip to next line
-  circuit.num_const_inp_wires = (uint32_t) atoi(raw_circuit);
-
-  raw_circuit = strchr(raw_circuit, ' ') + 1;
-  circuit.num_eval_inp_wires = (uint32_t)atoi(raw_circuit);
-
-  raw_circuit = strchr(raw_circuit, ' ') + 1;
-  circuit.num_out_wires = (uint32_t)atoi(raw_circuit);
-
-  circuit.out_wires_start = circuit.num_wires - circuit.num_out_wires;
-  circuit.num_const_out_wires = circuit.num_out_wires;
-  circuit.num_eval_out_wires = circuit.num_out_wires;
-
-  raw_circuit = strchr(raw_circuit, '\n') + 1; //Skip to next line
-  raw_circuit = strchr(raw_circuit, '\n') + 1; //Skip to next line
-
-  /*cout << circuit.num_wires << " "
-    << circuit.out_wires_start << " "
-    << circuit.num_const_inp_wires << " "
-    << circuit.num_eval_inp_wires << " "
-    << circuit.num_out_wires << " "
-    << circuit.num_const_out_wires << " "
-    << circuit.num_eval_out_wires << "\n";
-  */
-  circuit.num_gates = 0;
-  circuit.num_non_free_gates = 0;
-
-  ParseBristolGates(circuit, raw_circuit, EOF);
-
-  SetCircuitOffsetIndices(circuit);
-  AddOutputIdentityGates(circuit);
-
-  return circuit;
-}
+    raw_circuit = strchr(raw_circuit, ' ') + 1; //#number num_out_wires
+    circuit.num_out_wires = (uint32_t) atoi(raw_circuit);
+    circuit.num_eval_out_wires = circuit.num_out_wires;
+    circuit.num_const_out_wires = circuit.num_out_wires;
 
 
-Circuit GetIdentityCircuit(uint32_t num_const_inp_wires, uint32_t num_eval_inp_wires, std::string circuits_prefix) {
-  Circuit circuit;
-  circuit.composed_index = 0;
-  circuit.circuit_name = circuits_prefix + "_id_circuit";
+    raw_circuit = strchr(raw_circuit, ' ') + 1; // #number total wires
+    circuit.num_wires = (uint32_t) atoi(raw_circuit);
 
-  circuit.num_const_inp_wires = num_const_inp_wires;
-  circuit.num_eval_inp_wires = num_eval_inp_wires;
-  circuit.num_inp_wires = circuit.num_const_inp_wires + circuit.num_eval_inp_wires;
+    raw_circuit = strchr(raw_circuit, '\n') + 1; //Skip this line
 
-  circuit.num_const_out_wires = 0; //As the circuit is evaluated on eval side all identity output keys should be delivered to evaluator for further evaluation
-  circuit.num_eval_out_wires = circuit.num_inp_wires;
+  } else if (circuit_type == BRISTOL) {
+    raw_circuit = strchr(raw_circuit, ' ') + 1; //we dont need num_gates
+    circuit.num_wires = (uint32_t) atoi(raw_circuit);
+    raw_circuit = strchr(raw_circuit, '\n') + 1; //Skip to next line
+    circuit.num_const_inp_wires = (uint32_t) atoi(raw_circuit);
 
-  circuit.num_out_wires = circuit.num_inp_wires; //must be set before SetCircuitOffsetIndices call
+    raw_circuit = strchr(raw_circuit, ' ') + 1;
+    circuit.num_eval_inp_wires = (uint32_t)atoi(raw_circuit);
 
-  circuit.num_wires = circuit.num_inp_wires; //currently only input wires exist
+    raw_circuit = strchr(raw_circuit, ' ') + 1;
+    circuit.num_out_wires = (uint32_t)atoi(raw_circuit);
 
-  circuit.num_gates = 0;
-  circuit.num_non_free_gates = 0;
-  circuit.out_wires_start = 0;
-  SetCircuitOffsetIndices(circuit);
-  AddOutputIdentityGates(circuit);
+    circuit.out_wires_start = circuit.num_wires - circuit.num_out_wires;
+    circuit.num_const_out_wires = circuit.num_out_wires;
+    circuit.num_eval_out_wires = circuit.num_out_wires;
 
-  return circuit;
-}
-
-Circuit GetIdentityGate(bool const_input, std::string circuits_prefix, uint32_t composed_index) {
-  Circuit circuit;
-  circuit.composed_index = composed_index;
-  if (const_input) {
-    circuit.circuit_name = circuits_prefix + "_const_input_gate";
-  } else {
-    circuit.circuit_name = circuits_prefix + "_eval_input_gate";
+    raw_circuit = strchr(raw_circuit,  '\n') + 1; //Skip to next line
+    raw_circuit = strchr(raw_circuit,  '\n') + 1; //Skip to next line
   }
 
-  //Either belongs to const or eval
-  circuit.num_const_inp_wires = const_input;
-  circuit.num_eval_inp_wires = !const_input;
+  ParseGates(circuit, raw_circuit, circuit_type);
 
-  circuit.num_inp_wires = 1;
-
-  circuit.num_const_out_wires = 0;
-  circuit.num_eval_out_wires = 1; //As will be used for further evaluation only eval gates the output key
-
-  circuit.num_out_wires = circuit.num_inp_wires; //must be set before SetCircuitOffsetIndices call
-
-  circuit.num_wires = circuit.num_inp_wires; //currently only input wires exist
-
-  circuit.num_gates = 0;
-  circuit.num_non_free_gates = 0;
-  circuit.out_wires_start = 0;
-  SetCircuitOffsetIndices(circuit);
-  AddOutputIdentityGates(circuit);
-
-  return circuit;
-}
-
-//Parse the gate description given a char array of the description file.
-Circuit ParseCircuitInComposed(char raw_circuit[], std::string circuits_prefix) {
-  Circuit circuit;
-
-  raw_circuit = strchr(raw_circuit, ' ') + 1; //skip FN
-  circuit.composed_index = (uint32_t) atoi(raw_circuit) - 1;
-
-  circuit.circuit_name = circuits_prefix + "_" + std::to_string(circuit.composed_index);
-
-  raw_circuit = strchr(raw_circuit, ' ') + 1; //#number num_inp_wires
-  circuit.num_eval_inp_wires = (uint32_t) atoi(raw_circuit);
-  circuit.num_const_inp_wires = 0;
-  //Will make circuit.num_inp_wires values have the same value
-  //All intermediate circuits are interpreted as eval party owns all input wires.
-
-  circuit.out_wires_start = circuit.num_eval_inp_wires;
-
-  raw_circuit = strchr(raw_circuit, ' ') + 1; //#number num_out_wires
-  circuit.num_out_wires = (uint32_t) atoi(raw_circuit);
-  circuit.num_eval_out_wires = circuit.num_out_wires;
-  circuit.num_const_out_wires = circuit.num_out_wires;
-
-
-  raw_circuit = strchr(raw_circuit, ' ') + 1; // #number total wires
-  circuit.num_wires = (uint32_t) atoi(raw_circuit);
-
-  raw_circuit = strchr(raw_circuit, '\n') + 1; //Skip this line
-
-  circuit.num_gates = 0;
-  circuit.num_non_free_gates = 0;
-
-  ParseGates(circuit, raw_circuit, '-');
   SetCircuitOffsetIndices(circuit);
   AddOutputIdentityGates(circuit);
 
@@ -467,7 +344,7 @@ ComposedCircuit ParseComposedCircuit(char raw_circuit[], std::string circuits_pr
 
   /////////////////////////read each function///////////////////////////
   for (int i = 0; i < composed_circuit.num_functions; i++) { //starts at 1, we do not count main function
-    composed_circuit.functions.emplace_back(ParseCircuitInComposed(raw_circuit, circuits_prefix));
+    composed_circuit.functions.emplace_back(ParseCircuit(raw_circuit, COMPOSED, circuits_prefix));
     composed_circuit.name_to_function_num.emplace(composed_circuit.functions.back().circuit_name, composed_circuit.functions.back().composed_index);
     raw_circuit = strchr(raw_circuit, '-') + 1; //next function
     raw_circuit = strchr(raw_circuit, '\n') + 1; //skip line
@@ -663,37 +540,6 @@ void RelayerComposedCircuit(ComposedCircuit& composed_circuit) {
 }
 
 //Reads circuit in textual format. Writes byte length of text file to file_size.
-Circuit read_text_circuit(const char* circuit_file) {
-  FILE* file;
-  size_t file_size;
-  file = fopen(circuit_file, "r");
-  if (file == NULL) {
-    printf("ERROR: Could not open text circuit: %s\n", circuit_file);
-    exit(EXIT_FAILURE);
-  }
-  fseek(file, 0, SEEK_END);
-  file_size = ftell(file);
-  rewind(file);
-
-  std::unique_ptr<char[]> data(new char[file_size + 1]);
-  size_t size = fread(data.get(), 1, file_size, file);
-  if (size != file_size) {
-    printf("ERROR while loading file: %s\n", circuit_file);
-    exit(EXIT_FAILURE);
-  }
-  data[file_size] = EOF;
-  if (ferror(file)) {
-    printf("ERROR: fread() error\n");
-    exit(EXIT_FAILURE);
-  }
-  fclose(file);
-  Circuit circuit = ParseCircuit(data.get());
-
-  return circuit;
-
-}
-
-//Reads circuit in textual format. Writes byte length of text file to file_size.
 Circuit read_bristol_circuit(const char* circuit_file) {
   FILE* file;
   size_t file_size;
@@ -718,7 +564,7 @@ Circuit read_bristol_circuit(const char* circuit_file) {
     exit(EXIT_FAILURE);
   }
   fclose(file);
-  Circuit circuit = ParseBristolCircuit(data.get());
+  Circuit circuit = ParseCircuit(data.get(), BRISTOL);
 
   return circuit;
 

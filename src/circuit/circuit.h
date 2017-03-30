@@ -3,6 +3,11 @@
 
 #include "duplo-util/util.h"
 
+enum CIRCUIT_TYPE {
+	COMPOSED = 0,
+	BRISTOL = 1
+};
+
 static std::array<std::string, 16> gate_tables = {
 	"0000", //0 (0)
 	"0001", //1 (NOR)
@@ -160,23 +165,17 @@ void AddInputIdentityGates(ComposedCircuit& composed_circuit,
                            std::unordered_map<uint32_t, std::vector<uint32_t>>& holder_to_global_out_wires,
                            std::unordered_map<uint32_t, std::pair<uint32_t, uint32_t>>& global_out_wire_to_holder,
                            std::unordered_map<uint32_t, uint32_t>& unique_non_out_wires, std::string circuits_prefix);
-void ParseGates(Circuit& circuit, char raw_circuit[], char terminate_char);
+
+void ParseGates(Circuit& circuit, char raw_circuit[], CIRCUIT_TYPE circuit_type);
+Circuit ParseCircuit(char raw_circuit[], CIRCUIT_TYPE circuit_type, std::string prefix = "");
 
 void RelayerComposedCircuit(ComposedCircuit& composed_circuit);
 
-Circuit ParseCircuit(char raw_circuit[]);
-Circuit ParseBristolCircuit(char raw_circuit[]);
-Circuit GetIdentityCircuit(uint32_t num_const_inp_wires, uint32_t num_eval_inp_wires);
-Circuit GetIdentityGate(bool const_input, std::string circuits_prefix, uint32_t composed_index);
-
-Circuit ParseCircuitInComposed(char raw_circuit[], std::string circuits_prefix);
 ComposedCircuit ParseComposedCircuit(char* data, std::string circuits_prefix = "", uint32_t num_inputs_used = 0);
 
 ComposedCircuit read_composed_circuit(const char* circuit_file, std::string circuits_prefix = "");
 Circuit read_bristol_circuit(const char* circuit_file);
 
-//Convenience functions
-//Input is in bytes, while outputs are in bits
 osuCrypto::BitVector eval_circuit(Circuit& circuit, osuCrypto::BitVector& input, bool reverse = false);
 osuCrypto::BitVector eval_circuit(ComposedCircuit& composed_circuit, osuCrypto::BitVector& input);
 
