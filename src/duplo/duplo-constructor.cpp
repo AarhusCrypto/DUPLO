@@ -1460,29 +1460,6 @@ void DuploConstructor::ComputeAndSendComposedSolderings(uint32_t exec_id, Compos
           XOR_128(solder_keys[inp_pos[l] + curr_inp_wire],
                   ConstGarbledCircuit::inp_key_commit1(out_circuit, out_wire_component_aux_info.data()));
 
-          // if (i ==128 && j == 0) {
-          //   uint8_t tmp_buffer[CSEC_BYTES];
-          //   XOR_128(tmp_buffer, ConstGarbledCircuit::inp_key_commit0(out_circuit, out_wire_component_aux_info.data(), j),
-          //           ConstGarbledCircuit::inp_key_commit1(out_circuit, out_wire_component_aux_info.data(), j));
-          //   PrintHex(tmp_buffer, 16);
-          //   XOR_128(tmp_buffer,
-          //           ConstGarbledCircuit::delta_commit0(out_circuit, out_wire_component_aux_info.data()));
-          //   XOR_128(tmp_buffer,
-          //           ConstGarbledCircuit::delta_commit1(out_circuit, out_wire_component_aux_info.data()));
-          //   PrintHex(tmp_buffer, 16);
-          //   std::cout << "---" << std::endl;
-          //   XOR_128(tmp_buffer, ConstGarbledCircuit::inp_key_commit0(inp_circuit, inp_wire_component_aux_info.data(), i),
-          //           ConstGarbledCircuit::inp_key_commit1(inp_circuit, inp_wire_component_aux_info.data(), i));
-          //   PrintHex(tmp_buffer, 16);
-          //   XOR_128(tmp_buffer,
-          //           ConstGarbledCircuit::delta_commit0(inp_circuit, inp_wire_component_aux_info.data()));
-          //   XOR_128(tmp_buffer,
-          //           ConstGarbledCircuit::delta_commit1(inp_circuit, inp_wire_component_aux_info.data()));
-          //   PrintHex(tmp_buffer, 16);
-          //   std::cout << "---" << std::endl;
-          // }
-
-
           XOR_CodeWords(solder_keys_share[0][inp_pos[l] + curr_inp_wire], ConstGarbledCircuit::inp_key_commit0(out_circuit, out_wire_component_aux_info.data()));
 
           XOR_CodeWords(solder_keys_share[1][inp_pos[l] + curr_inp_wire], ConstGarbledCircuit::inp_key_commit1(out_circuit, out_wire_component_aux_info.data()));
@@ -1500,7 +1477,6 @@ void DuploConstructor::ComputeAndSendComposedSolderings(uint32_t exec_id, Compos
 
         perm_bits[inp_pos[l] + curr_inp_wire] = GetLSB(solder_keys[inp_pos[l] + curr_inp_wire]);
 
-        // Check if xor(inp_perm_bit, out_perm_bit) == 1. If it is we flip the soldering
         if (perm_bits[inp_pos[l] + curr_inp_wire]) {
 
           XOR_128(solder_keys[inp_pos[l] + curr_inp_wire],

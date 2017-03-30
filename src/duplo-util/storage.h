@@ -38,8 +38,6 @@ public:
   void PrepareFile(std::string file_name, DATA_TYPE data_type, uint64_t num_prepare_bytes);
 
   void WriteBuckets(std::string file_name, DATA_TYPE data_type, uint32_t buckets_from, uint32_t num_buckets, uint8_t data_to_write[], uint64_t write_pos, uint64_t num_bytes, uint32_t bucket_size);
-  
-  // void OverWriteBuckets(std::string file_name, DATA_TYPE data_type, uint32_t buckets_from, uint32_t num_buckets, uint8_t data_to_write[], uint64_t write_pos, uint64_t num_bytes, uint32_t bucket_size);
 
   void ReadBuckets(std::string file_name, DATA_TYPE data_type, uint32_t buckets_from, uint32_t num_buckets, BYTEArrayVector& res, bool use_buffer = false, uint32_t exec_id = std::numeric_limits<uint32_t>::max());
 

@@ -6,7 +6,7 @@
 class GarbledCircuit {
 private:
   BYTEArrayVector garbled_tables;
-  std::vector<uint8_t> aux_info; //Cannot be BYTEArrayVector as entires vary in size
+  std::vector<uint8_t> aux_info;
 
 public:
 
