@@ -104,16 +104,9 @@ public:
 
 void WeightedRandomString(uint8_t res[], int weight, int res_length, osuCrypto::PRNG& rnd, bool negate_probability);
 
-void FindBestSingleParams(uint32_t num_buckets, uint32_t& res_bucket, long double& check_val, bool& check_val_negate);
-
-void MaxSingleProb(int b, uint32_t num_buckets, mpf_class& curr_p, mpf_class& max_prob);
-
-void FindBestMajorityParams(uint32_t num_buckets, uint32_t& res_bucket, long double& check_val, bool& check_val_negate, uint32_t catch_reciproc_prob);
-void MaxProbMajority(int b, uint32_t num_buckets, mpf_class& curr_p, mpf_class& max_prob, uint32_t catch_reciproc_prob);
+void ComputeIndices(uint32_t num_circuits, Circuit& circuit, uint32_t& num_inp_keys, uint32_t& num_out_keys, uint32_t& num_deltas, uint32_t& num_commit_keys, uint32_t& num_base_keys, uint32_t& input_keys_idx, uint32_t& output_keys_idx, uint32_t& deltas_idx);
 
 void ComputeCheckFraction(int check_frac, int num_items, float& final_rep_frac, bool negate_check_probability);
-
-void ComputeIndices(uint32_t num_circuits, Circuit& circuit, uint32_t& num_inp_keys, uint32_t& num_out_keys, uint32_t& num_deltas, uint32_t& num_commit_keys, uint32_t& num_base_keys, uint32_t& input_keys_idx, uint32_t& output_keys_idx, uint32_t& deltas_idx);
 
 void PickBestSingleBucketParams(uint32_t num_buckets, uint32_t& bucket_size, long double& check_factor, bool& negate_check_factor);
 
