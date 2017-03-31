@@ -5,7 +5,12 @@ A C++ implementation of the DUPLO cryptographic protocol
 The code has been tested to work on MacOS (10.12.1) and Ubuntu 16.04.
 
 ### Requirements
-* C++ compiler with C++14 support. The code has been successfully built with GCC 5.3.1, GCC 6.1 and CLANG 3.8. The DUPLO runtime code is , meaning no external libraries are required. However for the TableProducer executable ([GMP](https://gmplib.org) for arbitrary-precision arithmetic) is required. Additionally for the Frigate extension compiler, the following external libraries are required:
+* C++ compiler with C++14 support. The code has been successfully built with GCC 5.3.1, GCC 6.1 and CLANG 3.8. For building the main DUPLO runtime code the following tools are required
+* make
+* cmake
+* wget
+
+In addition, for the TableProducer executable ([GMP](https://gmplib.org) for arbitrary-precision arithmetic) is required. Finally for the Frigate extension compiler, the following external libraries are required:
 * [Flex](https://github.com/westes/flex)
 * [Bison](https://www.gnu.org/software/bison/) (version 2.7)
 
