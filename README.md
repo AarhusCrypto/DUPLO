@@ -10,15 +10,16 @@ The code has been tested to work on MacOS (10.12.1) and Ubuntu 16.04.
 * cmake
 * wget
 
-In addition, for the TableProducer executable ([GMP](https://gmplib.org) for arbitrary-precision arithmetic) is required. Finally for the Frigate extension compiler, the following external libraries are required:
-* [Flex](https://github.com/westes/flex)
-* [Bison](https://www.gnu.org/software/bison/) (version 2.7)
+In addition, for the TableProducer executable [GMP](https://gmplib.org) for arbitrary-precision arithmetic is required. Finally for the Frigate extension compiler, the following external libraries are required:
+* [Flex](https://github.com/westes/flex) (tested with Flex 2.5.35 and 2.6)
+* [Bison](https://www.gnu.org/software/bison/) (version 2.7, seems to be issues on systems with bison 3.x)
 
 NOTE: If these libraries are not detected by the build system, the TableProducer and/or Frigate executables will be skipped during compilation.
 
 #### Installing GMP and Bison 2.7 on MacOS (10.12) and updating PATH
 Using homebrew:
-* brew install gmp/gmp@4
+* brew install gmp
+* brew install gmp@4
 * brew install bison@2.7
 * Add 'export PATH="/usr/local/opt/bison@2.7/bin:$PATH"' to end of ~/.bash_profile
 
