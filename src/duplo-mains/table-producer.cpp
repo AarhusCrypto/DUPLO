@@ -97,7 +97,7 @@ void FindBestSingleParams(uint32_t num_buckets, uint32_t& res_bucket, long doubl
       MaxSingleProb(b, num_buckets, curr_p, max_prob);
 
       //Check if current params satisfy security
-      if ((max_prob != 0) && (max_prob < target_prob)) {
+      if ((max_prob != 0) && (max_prob <= target_prob)) {
         res_bucket = b;
         check_val = check_p;
         check_val_negate = false;
@@ -123,7 +123,7 @@ void FindBestSingleParams(uint32_t num_buckets, uint32_t& res_bucket, long doubl
       MaxSingleProb(b, num_buckets, curr_p, max_prob);
 
       //Check if current params satisfy security
-      if ((max_prob != 0) && (max_prob < target_prob)) {
+      if ((max_prob != 0) && (max_prob <= target_prob)) {
         res_bucket = b;
         check_val = check_p;
         check_val_negate = true;
