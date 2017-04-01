@@ -35,7 +35,6 @@ Circuit duploParseCircuit(char raw_circuit[]) {
 	raw_circuit = strchr(raw_circuit, ' ') + 1; //skip FN
 	circuit.idxCircuit = (uint32_t) atoi(raw_circuit);
 //	circuit.name_function = "FN" + to_string(circuit.idxCircuit);
-
 	
 	raw_circuit = strchr(raw_circuit, ' ') + 1; //#number num_inp_wires
 	circuit.num_inp_wires = (uint32_t) atoi(raw_circuit);	
@@ -58,17 +57,12 @@ Circuit duploParseCircuit(char raw_circuit[]) {
 		r1++;
 	}
 	char type[4];
-	//memcpy(type, raw_circuit, 4 * sizeof(char));
-	//std::string type_string(type);
-	//circuit.circuit_name = type_string;
 	
 	raw_circuit = strchr(raw_circuit, '\n') + 1; //Skip this line
 
 	int curr_gate_num = 0;
 	uint32_t num_inputs = 0, left_wire_idx, right_wire_idx, out_wire_idx, num_child_func = 0, child_wire, num_shift = 0;
 	
-
-
 	while (*raw_circuit != '-') {
 		if (*raw_circuit == '\n') {
 			raw_circuit = strchr(raw_circuit, '\n') + 1;
@@ -98,18 +92,10 @@ Circuit duploParseCircuit(char raw_circuit[]) {
 			{
 				child_wire = (uint32_t) atoi(raw_circuit);
 				global_inp_out_wires.emplace(i, child_wire);
-//				circuit.gates.emplace_back(Gate());
-//				circuit.gates[curr_gate_num].type = "XOR";
-//				circuit.gates[curr_gate_num].left_wire = child_wire;
-//				circuit.gates[curr_gate_num].right_wire = circuit.gates[1].out_wire;
-//				circuit.gates[curr_gate_num].out_wire = circuits[num_child_func].inp_wires_start + i 
-//														+ circuit.num_wires;
-//				++curr_gate_num;
 				raw_circuit = strchr(raw_circuit, ' ') + 1;
 			}
 			raw_circuit = strchr(raw_circuit, '\n') + 1;
 			//cout << "num_child_func " << num_child_func << endl;
-
 
 			if (*raw_circuit != '+')
 			{
@@ -124,13 +110,6 @@ Circuit duploParseCircuit(char raw_circuit[]) {
 			{
 				child_wire = (uint32_t) atoi(raw_circuit);
 				global_inp_out_wires.emplace(i + circuits[num_child_func].num_inp_wires, child_wire);
-//				circuit.gates.emplace_back(Gate());
-//				circuit.gates[curr_gate_num].type = "XOR";
-//				circuit.gates[curr_gate_num].left_wire = circuits[num_child_func].out_wires_start + i 
-//														+ circuit.num_wires;
-//				circuit.gates[curr_gate_num].right_wire = circuit.gates[1].out_wire;
-//				circuit.gates[curr_gate_num].out_wire = child_wire;
-//				++curr_gate_num;
 				raw_circuit = strchr(raw_circuit, ' ') + 1;
 			}
 
@@ -145,29 +124,17 @@ Circuit duploParseCircuit(char raw_circuit[]) {
 				//left_wire
 				if (circuits[num_child_func].gates[j].left_wire < num_inp_out_wires)
 					circuit.gates[curr_gate_num].left_wire = global_inp_out_wires[circuits[num_child_func].gates[j].left_wire];
-				//else if (circuits[num_child_func].gates[j].left_wire == circuits[num_child_func].gates[0].out_wire) //local zero gate
-				//	circuit.gates[curr_gate_num].left_wire = circuit.gates[0].out_wire; //use global zero gate
-			//	else if (circuits[num_child_func].gates[j].left_wire == circuits[num_child_func].gates[1].out_wire) //local one gate
-			//		circuit.gates[curr_gate_num].left_wire = circuit.gates[1].out_wire;//use global one gate
 				else
 					circuit.gates[curr_gate_num].left_wire = circuits[num_child_func].gates[j].left_wire + circuit.num_wires;
 
 					//right_wire
 				if (circuits[num_child_func].gates[j].right_wire < num_inp_out_wires)
 					circuit.gates[curr_gate_num].right_wire = global_inp_out_wires[circuits[num_child_func].gates[j].right_wire];
-//				else if (circuits[num_child_func].gates[j].right_wire == num_inp_out_wires) //local zero gate
-//					circuit.gates[curr_gate_num].right_wire = circuit.gates[0].out_wire; //use global zero gate
-	//			else if (circuits[num_child_func].gates[j].right_wire == num_inp_out_wires+1) //local one gate
-		//			circuit.gates[curr_gate_num].right_wire = circuit.gates[1].out_wire;//use global one gate
 				else
 					circuit.gates[curr_gate_num].right_wire = circuits[num_child_func].gates[j].right_wire + circuit.num_wires;
 				
 				if (circuits[num_child_func].gates[j].out_wire < num_inp_out_wires)
 					circuit.gates[curr_gate_num].out_wire = global_inp_out_wires[circuits[num_child_func].gates[j].out_wire];
-//				else if (circuits[num_child_func].gates[j].out_wire == num_inp_out_wires) //local zero gate
-//					circuit.gates[curr_gate_num].out_wire = circuit.gates[0].out_wire; //use global zero gate
-//				else if (circuits[num_child_func].gates[j].out_wire == num_inp_out_wires+1) //local one gate
-//					circuit.gates[curr_gate_num].out_wire = circuit.gates[1].out_wire;//use global one gate
 				else
 					circuit.gates[curr_gate_num].out_wire = circuits[num_child_func].gates[j].out_wire + circuit.num_wires;
 
@@ -179,10 +146,6 @@ Circuit duploParseCircuit(char raw_circuit[]) {
 		}
 		else
 		{
-		//	num_inputs = (uint32_t) atoi(raw_circuit);
-		//	raw_circuit = strchr(raw_circuit, ' ') + 1;
-		//	raw_circuit = strchr(raw_circuit, ' ') + 1; //We skip num_output wires as they all have 1.
-
 		
 				left_wire_idx = (uint32_t) atoi(raw_circuit);
 				raw_circuit = strchr(raw_circuit, ' ') + 1;
@@ -192,12 +155,7 @@ Circuit duploParseCircuit(char raw_circuit[]) {
 
 				raw_circuit = strchr(raw_circuit, ' ') + 1;
 
-			//uint32_t typpp = (uint32_t) atoi(raw_circuit);
-
-			//stringstream ss;
-			//ss << typpp;
-			//string type_string = ss.str();
-
+			//stupid code
 			std::string type_string;
 			for (int ii = 0; ii < 4; ++ii) {
 				if (raw_circuit[ii] == '0')
@@ -205,14 +163,6 @@ Circuit duploParseCircuit(char raw_circuit[]) {
 				else
 					type_string.append("1");
 			}
-
-//			type[0] = raw_circuit[0];
-//			type[1] = raw_circuit[1];
-//			type[2] = raw_circuit[2];
-//			type[3] = raw_circuit[3];
-
-				//memcpy(type, raw_circuit, 4 * sizeof(char));
-				//std::string type_string(type);
 
 			if (type_string.find("0000") != std::string::npos //(0)
 				||type_string.find("0011") != std::string::npos //3 - 0011 (invert passthrough a)
@@ -222,15 +172,13 @@ Circuit duploParseCircuit(char raw_circuit[]) {
 				||type_string.find("1010") != std::string::npos // 10 - 1010 (passthrough b)
 				||type_string.find("1100") != std::string::npos // 12 - 1100 (passthrough a)
 				||type_string.find("1111") != std::string::npos // // 15 - 1111 (1)
-
 				) {
 					circuit.gates.emplace_back(Gate());
 					circuit.gates[curr_gate_num].type = type_string;
 					circuit.gates[curr_gate_num].left_wire = left_wire_idx;
 					circuit.gates[curr_gate_num].right_wire = right_wire_idx;
 					circuit.gates[curr_gate_num].out_wire = out_wire_idx;
-					++curr_gate_num;
-										
+					++curr_gate_num;										
 				}
 				else {
 					circuit.gates.emplace_back(Gate());
@@ -300,8 +248,7 @@ bool frigate_ParseComposedCircuit(char raw_circuit[]) {
 		raw_circuit = strchr(raw_circuit, '\n') + 1; //skip line
 		raw_circuit = strchr(raw_circuit, '\n') + 1; //skip line
 	} //done with reading the component
-	
-	
+		
 
 //////////
 ///DUPLO format
@@ -309,16 +256,8 @@ bool frigate_ParseComposedCircuit(char raw_circuit[]) {
 	
 	std::vector<std::string> strFunction(num_functions - 1);
 
-//	fDuplo << num_functions << " " << num_layer << " " << num_component << "\n";//" // #numberfunction #layer  #numberComponent\n";
-//	fDuplo << num_const_inp_wires << " " << num_eval_inp_wires << " " << num_const_out_wires << " " << num_eval_out_wires << "\n";//" //#input_eval #input_const #output_eval #output_const\n\n";	
 	for (int i = 0; i < num_functions - 1; i++)
 	{	
-
-		//fDuplo << "FN " << circuits[i].idxCircuit << " " 
-//						<< circuits[i].num_inp_wires << " " 
-//						<< circuits[i].num_out_wires << " " 
-//						<< circuits[i].num_wires << "\n";//<< "//# FN id num_inp_wires num_out_wires num_wires //"  << "non-free-gate: " << circuits[i].num_non_free_gates << "\n";
-
 		for (int j = 0; j < circuits[i].gates.size(); j++)
 		{
 		
@@ -329,27 +268,13 @@ bool frigate_ParseComposedCircuit(char raw_circuit[]) {
 			
 			
 		}	
-		//fDuplo << strFunction[i];
-		//fDuplo << "--end FN " << circuits[i].idxCircuit  << " -- \n\n";
-
-//	ofstream fFuncs1;
-//	fFuncs1.open(dir + "_duplo_function_test"+to_string(i));
-//		fFuncs1 << circuits[i].circuit_name << endl;
-//	fFuncs1 << circuits[i].num_non_free_gates << endl;
-//	fFuncs1 << strFunction[i];
-//	fFuncs1.close();
 	}
 
 
 	raw_circuit = strchr(raw_circuit, '\n') + 1;
-	//raw_circuit = strchr(raw_circuit, '\n') + 1;
 	std::istringstream type_string(raw_circuit);
 	string line;
-//	while (getline(type_string, line) && !type_string.eof()) {
-//		fDuplo << line << "\n";
-//	}
 
-//	raw_circuit = strchr(raw_circuit, '\n') + 1;
 	int pos;
 	vector <std::tuple<int, string, string>> functions_duplo;
 	std::map<uint32_t, uint32_t> real_functions;
@@ -389,15 +314,13 @@ bool frigate_ParseComposedCircuit(char raw_circuit[]) {
 	
 	
 		fDuplo << real_functions.size()  << " " << functions_duplo.size() << "\n";//" // #numberfunction   #numberComponent\n";
-		fDuplo << num_const_inp_wires << " " << num_eval_inp_wires << " " << num_const_out_wires << " " << num_const_out_wires << " " << num_eval_out_wires << "\n\n";// " //#input_eval #input_const #output_eval #output_const\n\n";
-	
+		fDuplo << num_const_inp_wires << " " << num_eval_inp_wires << " " << num_const_out_wires << " " << num_const_out_wires << " " << num_eval_out_wires << "\n\n";// " //#input_eval #input_const #output_eval #output_const\n\n";	
 
 		int id = 1;
 
 			//sort by value
 		vector<pair<uint32_t, uint32_t> > mapcopy(real_functions.begin(), real_functions.end());
 		sort(mapcopy.begin(), mapcopy.end(), less_second<uint32_t, uint32_t>());
-
 	
 		for (auto it = mapcopy.begin(); it != mapcopy.end(); ++it)
 		{
@@ -431,7 +354,6 @@ bool frigate_ParseComposedCircuit(char raw_circuit[]) {
 	{
 		fDuplo << "FN " << real_functions.size() + 1 << "\n\n"; 
 	
-	
 		for (int i = 0; i <  functions_duplo.size(); i++)
 		{
 			fDuplo << "FN " << std::get<0>(functions_duplo[i]) << "\n";
@@ -458,7 +380,7 @@ bool frigate_ParseComposedCircuit(char raw_circuit[]) {
 	
 
 //////////
-///Bristol format 
+///Bristol format => dont work for gate 2, 4...
 /////////	
 
 	if (isBristolDup || isBristol)
@@ -510,38 +432,8 @@ bool frigate_ParseComposedCircuit(char raw_circuit[]) {
 
 		main_circuit.num_wires = max_wire + 1;
 
-		//	one_gate = main_circuit.num_wires;
-		//	zero_gate = one_gate + 1;
-		//	main_circuit.num_wires += 2;
-		//
-		//	//add zero, one gate
-		//	main_circuit.gates.emplace_back(Gate());
-		//	main_circuit.gates[curr_gate_num].type = "NXOR";
-		//	main_circuit.gates[curr_gate_num].left_wire = 0;
-		//	main_circuit.gates[curr_gate_num].right_wire = 0;
-		//	main_circuit.gates[curr_gate_num].out_wire = one_gate;
-		//	++curr_gate_num;
-		//
-		//
-		//	main_circuit.gates.emplace_back(Gate());
-		//	main_circuit.gates[curr_gate_num].type = "XOR";
-		//	main_circuit.gates[curr_gate_num].left_wire = 0;
-		//	main_circuit.gates[curr_gate_num].right_wire = 0;
-		//	main_circuit.gates[curr_gate_num].out_wire = zero_gate;
-		//	++curr_gate_num;
-
 		for (int i = 0; i < functions.size(); i++)
 		{		
-		
-			//		for (uint32_t j = 0; j < circuits[std::get<0>(functions[i])].num_inp_wires; j++)
-			//		{
-			//			main_circuit.gates.emplace_back(Gate());
-			//			main_circuit.gates[curr_gate_num].type = "XOR";
-			//			main_circuit.gates[curr_gate_num].left_wire = std::get<1>(functions[i])[j];
-			//			main_circuit.gates[curr_gate_num].right_wire = 	zero_gate;
-			//			main_circuit.gates[curr_gate_num].out_wire = circuits[std::get<0>(functions[i])].inp_wires_start + j + main_circuit.num_wires;
-			//			++curr_gate_num;
-			//		}
 
 			int num_inp_out_wires = circuits[std::get<0>(functions[i])].num_inp_wires + circuits[std::get<0>(functions[i])].num_out_wires;
 			for (int j = 0; j < circuits[std::get<0>(functions[i])].gates.size(); j++)
@@ -552,7 +444,7 @@ bool frigate_ParseComposedCircuit(char raw_circuit[]) {
 // 8 - 1000 (and)
 // 14 - 1110 (or)
 // 1 - 0001 (nor)
-
+				
 				if (circuits[std::get<0>(functions[i])].gates[j].type == "0111" || 
 					circuits[std::get<0>(functions[i])].gates[j].type == "1000" ||
 					circuits[std::get<0>(functions[i])].gates[j].type == "1110" ||
@@ -580,20 +472,9 @@ bool frigate_ParseComposedCircuit(char raw_circuit[]) {
 					main_circuit.gates[curr_gate_num].out_wire = circuits[std::get<0>(functions[i])].gates[j].out_wire + main_circuit.num_wires;
 				++curr_gate_num;
 			}
-			//		for (int j = 0; j < circuits[std::get<0>(functions[i])].num_out_wires; j++)
-			//		{
-			//			main_circuit.gates.emplace_back(Gate());
-			//			main_circuit.gates[curr_gate_num].type = "XOR";
-			//			main_circuit.gates[curr_gate_num].left_wire = circuits[std::get<0>(functions[i])].out_wires_start + j 
-			//													+ main_circuit.num_wires; 
-			//			main_circuit.gates[curr_gate_num].right_wire = zero_gate;
-			//			main_circuit.gates[curr_gate_num].out_wire =  std::get<2>(functions[i])[j]; 
-			//			++curr_gate_num;
-			//		}
 			if (circuits[std::get<0>(functions[i])].num_wires > num_shift)
 				num_shift = circuits[std::get<0>(functions[i])].num_wires;
-
-						//main_circuit.num_wires = main_circuit.num_wires + circuits[std::get<0>(functions[i])].num_wires;
+						
 		}
 		main_circuit.num_wires = main_circuit.num_wires + num_shift;
 
@@ -739,8 +620,6 @@ void frigate_read_text_circuit(const char* circuit_file, bool isBDup, bool isB, 
 
 	std::string str(circuit_file);
 	dir = str;
-	//if (strstr(str.c_str(), "aes"))
-	//	isAES = true;
 
 	isAES = is_AES;
 	isRandom = is_random;
@@ -769,7 +648,7 @@ void frigate_read_text_circuit(const char* circuit_file, bool isBDup, bool isB, 
 	fclose(file);
 	bool isDuploFormat=frigate_ParseComposedCircuit(data.get());
 	//if (!isDuploFormat)
-	//	remove(circuit_file);
+	remove(circuit_file);
 	
 }
 
@@ -926,9 +805,6 @@ Circuit sBoxYale113_parse(char raw_circuit[]) {
 	while (curr_gate_num != 113 && !type_string.eof() && getline(type_string, line)) {
 		if (!line.empty())
 		{
-			//cout << "\n" << line << "\n";//y14 = x3 + x5;
-			//line.erase(0,  2); // remove " " at the first line
-			//line.erase(0, line.find_first_not_of(' '));  
 			if (line.at(0) != '/')
 			{
 				pos_wire = line.find(" "); //out_wire
@@ -1005,7 +881,7 @@ Circuit read_text_sBoxYale()
 {
 	FILE* file;
 	size_t file_size;
-	const char* circuit_file = "frigate/tests/duplo/SLP_AES_113.txt";
+	const char* circuit_file = "tests/duplo/SLP_AES_113.txt";
 	//const char* circuit_file = "tests/dp/AES_Sbox.txt";
 	file = fopen(circuit_file, "r");
 
@@ -1113,11 +989,8 @@ Circuit generate_random_circuit(int num_nonXOR_gate)
 		{
 			cRandom.gates[curr_gate_num].type = "1000";// 8 - 1000 (and)
 			cRandom.num_non_free_gates++;
-		}
+		}		
 		
-		//if (wires[idx_rnd_inp_wire1] == 4783375 || wires[idx_rnd_inp_wire2] == 4783375)
-		//	cout << "d";
-
 		cRandom.gates[curr_gate_num].left_wire =  wires[idx_rnd_inp_wire1];
 		cRandom.gates[curr_gate_num].right_wire = wires[idx_rnd_inp_wire2];
 		cRandom.gates[curr_gate_num].out_wire = rand_out_wire;

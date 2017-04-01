@@ -1,4 +1,4 @@
-# Batched Oblivious PRF
+# Frigate Extension Compiler (used for Duplo)
 This is the implementation of our xxx paper: **DUPLO: Unifying Cut-and-Choose for Garbled Circuits**[[ePrint](https://eprint.iacr.org/2017/xxx)].  We extend the [`Frigate`](https://bitbucket.org/bmood/frigaterelease) compiler that allows to transform a high-level C-style program into a
 set of boolean circuit components that can be fed to
 the DUPLO system for secure computation
@@ -22,8 +22,7 @@ After cloning project from git,
 	frigate <program> flag1 … flag n
 	
 #### Additional Flags:
-	-dp			output circuit file in DUPLO format
-	-b			output circuit file in [`Bristol`](https://www.cs.bris.ac.uk/Research/CryptographySecurity/MPC/) format
+	-dp		output circuit file in DUPLO format
 	-aes 		embed the [`S-Box`](http://www.cs.yale.edu/homes/peralta/CircuitStuff/CMT.html) circuit to generate AES circuits efficiently
 	-rand		generate a random component subcircuit to finding "sweet spot" for DUPLO
 #### Example:
@@ -35,4 +34,10 @@ After cloning project from git,
 	./frigate ./circuits/randomcCircuits/p12_1_test.wir -dp -rand
 	
 ### DUPLO circuit format: 
-Each file consists of:
+Each file .GC_Duplo consists of:
+1. A first line defining the number of functions and then the number of components in the circuit.
+2. A second line defining the length (in bits) of constructor's input, evaluator's input, the size of total output, the size of construtor's output, and the size of evaluator's output
+3. Each function starts at "FN" and ends at "--end FN #id--". The first line of the function shows the function index, the length of input, the length of output, the number of wires, the number of non-xor gate, and the number of gates.
+4. Gate operation: 
+
+
