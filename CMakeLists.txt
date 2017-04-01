@@ -16,7 +16,7 @@ ENDIF(${CMAKE_BUILD_TYPE} MATCHES "RELEASE")
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/build/obj/")
 
 #Find libraries
-find_package(FindGMP HINTS cmake/)
+find_package(FindGMP QUIET HINTS cmake/)
 
 #Required for large mallocs on some platforms
 set(ENV{MALLOC_PERMIT_INSANE_REQUESTS} "SOME VALUE")

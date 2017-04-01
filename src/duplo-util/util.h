@@ -20,11 +20,6 @@ static inline void XORLSB(uint8_t array[], uint8_t bit) {
 static inline void PartitionBufferFixedNum(std::vector<int>& from, std::vector<int>& to, int num_cpus, int work_size) {
   int work_pr_thread = work_size / num_cpus;
   int remaining_work = work_size % num_cpus;
-  // For thread index debugging
-  // std::cout << "work_size: " << work_size << std::endl;
-  // std::cout << "num_cpus: " << num_cpus << std::endl;
-  // std::cout << "work_pr_thread: " << work_pr_thread << std::endl;
-  // std::cout << "remaining_work: " << remaining_work << std::endl;
 
   int offset = 0;
   for (int i = 0; i < num_cpus; ++i) {
@@ -34,8 +29,7 @@ static inline void PartitionBufferFixedNum(std::vector<int>& from, std::vector<i
     }
     from.emplace_back(i * work_pr_thread + offset);
     to.emplace_back(i * work_pr_thread + offset + work_pr_thread + extra_to);
-    // std::cout << "Thread" << i << "from:" << from[i] << std::endl;
-    // std::cout << "Thread" << i << "to:" << to[i] << std::endl;
+
     if (remaining_work > 0) {
       offset++;
       remaining_work--;
@@ -47,17 +41,11 @@ static inline void PartitionBufferFixedNum(std::vector<int>& from, std::vector<i
 static inline void PartitionBufferDynNum(std::vector<int>& from, std::vector<int>& to, int buffer_size, int work_size) {
   int num_iterations = work_size / buffer_size;
   int work_last_iteration = work_size % buffer_size;
-  // For thread index debugging
-  // std::cout << "work_size: " << work_size << std::endl;
-  // std::cout << "num_cpus: " << num_cpus << std::endl;
-  // std::cout << "work_pr_thread: " << work_pr_thread << std::endl;
-  // std::cout << "remaining_work: " << remaining_work << std::endl;
 
   for (int i = 0; i < num_iterations; ++i) {
     from.emplace_back(i * buffer_size);
     to.emplace_back(i * buffer_size + buffer_size);
-    // std::cout << "Thread" << i << "from:" << from[i] << std::endl;
-    // std::cout << "Thread" << i << "to:" << to[i] << std::endl;
+    
   }
   if (work_last_iteration > 0) {
     from.emplace_back(num_iterations * buffer_size);

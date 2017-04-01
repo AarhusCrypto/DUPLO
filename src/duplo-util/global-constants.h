@@ -23,21 +23,7 @@ static uint8_t global_aes_key[CSEC_BYTES] = {0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae,
 #define NUM_COMMIT_SEED_OT CODEWORD_BITS
 
 //ThreadPool
-#define NUM_IO_THREADS 2
 #define TP_MUL_FACTOR 1
-
-//Timings
-#define EVAL_COMMIT_TIME 0
-#define EVAL_VERLEAK_TIME 1
-#define EVAL_RECEIVE_GATES_AUTHS_TIME 2
-#define EVAL_CNC_TIME 3
-#define EVAL_NUM_TIMINGS 4
-
-#define CONST_COMMIT_TIME 0
-#define CONST_VERLEAK_TIME 1
-#define CONST_GARBLING_TIME 2
-#define CONST_CNC_TIME 3
-#define CONST_NUM_TIMINGS 4
 
 #define single_bucket_param_table_size 22
 static uint32_t single_bucket_param_table[single_bucket_param_table_size][4] = {

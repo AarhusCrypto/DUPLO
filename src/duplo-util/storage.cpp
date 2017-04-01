@@ -99,47 +99,6 @@ void Storage::WriteBuckets(std::string file_name, DATA_TYPE data_type, uint32_t 
   map_mutex.unlock();
 }
 
-// void Storage::OverWriteBuckets(std::string file_name, DATA_TYPE data_type, uint32_t buckets_from, uint32_t num_buckets, uint8_t data_to_write[], uint64_t write_pos, uint64_t num_bytes, uint32_t bucket_size) {
-
-//   std::string full_file_name = GetFullFileName(file_name, data_type);
-//   uint64_t bucket_location = filepos_map[std::make_tuple(full_file_name, buckets_from)];
-//   uint64_t real_write_pos = bucket_location + write_pos;
-//   uint64_t num_prepare_bytes = file_size_map[full_file_name];
-//   if ((real_write_pos + num_bytes) > num_prepare_bytes) {
-//     perror("Writing outside file");
-//     exit(EXIT_FAILURE);
-//   }
-
-//   int fd = open(full_file_name.c_str(), O_WRONLY, S_IRWXU);
-
-//   if (lseek(fd, real_write_pos, SEEK_SET) == -1) {
-//     //below is not good practice. See comment for explanation.
-//     close(fd);
-//     perror("Error calling lseek() to 'stretch' the file");
-//     exit(EXIT_FAILURE);
-//   }
-
-//   uint64_t q = num_bytes / max_num_write_bytes;
-//   uint64_t r = num_bytes % max_num_write_bytes;
-
-//   for (uint64_t i = 0; i < q; ++i) {
-
-//     if (write(fd, data_to_write + i * max_num_write_bytes, max_num_write_bytes) == -1) {
-//       close(fd);
-//       perror("Error writing last byte of the file");
-//       exit(EXIT_FAILURE);
-//     }
-//   }
-
-//   if (write(fd, data_to_write + q * max_num_write_bytes, r) == -1) {
-//     close(fd);
-//     perror("Error writing last byte of the file");
-//     exit(EXIT_FAILURE);
-//   }
-
-//   close(fd);
-// }
-
 void Storage::ReadBuckets(std::string file_name, DATA_TYPE data_type, uint32_t buckets_from, uint32_t num_buckets, BYTEArrayVector& res, bool use_buffer, uint32_t exec_id) {
 
   if (num_buckets == 0) {

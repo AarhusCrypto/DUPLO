@@ -28,7 +28,6 @@
 #include <chrono>
 #include <algorithm>
 #include <numeric>
-#include <gmpxx.h>
 
 #include "duplo-util/filenames.h"
 #include "duplo-util/global-constants.h"
