@@ -1,5 +1,5 @@
-find_package(BISON 2.7 QUIET)
-find_package(FLEX QUIET)
+find_package(BISON 2.7 EXACT QUIET)
+find_package(FLEX 2.5.35 QUIET)
 
 if(${BISON_FOUND} AND ${FLEX_FOUND})
 
@@ -64,7 +64,7 @@ message("Bison 2.7 not found")
 endif(NOT ${BISON_FOUND})
 
 if(NOT ${FLEX_FOUND})
-message("Flex not found")
+message("Flex 2.5.35 or newer not found")
 endif(NOT ${FLEX_FOUND})
 
 message("==================")
