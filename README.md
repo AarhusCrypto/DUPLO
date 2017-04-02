@@ -28,7 +28,7 @@ Links to the required packages for the Frigate compiler:
   * [`bison  2.7.12-4996`](http://launchpadlibrarian.net/140087283/libbison-dev_2.7.1.dfsg-1_amd64.deb)
   * [`flex  2.5.37`](http://launchpadlibrarian.net/140087282/bison_2.7.1.dfsg-1_amd64.deb)
   
-Please read [`Frigate`](https://bitbucket.org/bmood/frigaterelease) for more detail about how to install the required libraries
+Please see [`Frigate Readme`](https://bitbucket.org/bmood/frigaterelease) or [`Local Frigate Readme`](https://github.com/AarhusCrypto/DUPLO/blob/master/frigate/README.txt) for more details on how to install the required libraries.
 
 ### Building the Project
 To clone, build and test the code:
