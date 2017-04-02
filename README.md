@@ -23,7 +23,14 @@ Using homebrew:
 * brew install bison@2.7
 * Add 'export PATH="/usr/local/opt/bison@2.7/bin:$PATH"' to end of ~/.bash_profile
 
-#### Building on Linux/macOS
+#### Linux Notes
+Links to the required packages for the Frigate compiler:
+  * [`bison  2.7.12-4996`](http://launchpadlibrarian.net/140087283/libbison-dev_2.7.1.dfsg-1_amd64.deb)
+  * [`flex  2.5.37`](http://launchpadlibrarian.net/140087282/bison_2.7.1.dfsg-1_amd64.deb)
+  
+Please read [`Frigate`](https://bitbucket.org/bmood/frigaterelease) for more detail about how to install the required libraries
+
+### Building the Project
 To clone, build and test the code:
 * git clone --recursive https://github.com/AarhusCrypto/DUPLO
 * cd DUPLO
