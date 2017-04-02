@@ -4093,8 +4093,9 @@ void writeComplexGate(ostream & mos,short op, int dest, int x, int y, int length
 	//duplo
 	if (isPrintDuploGC) 
 	{
-		strDuploGC.append(" Complex op: " + to_string(x) + " " + to_string(y) + " " + to_string(dest) + " " + to_string(op) + " " + to_string(length) + "\n");
-		strDuploGC.append("todo\n");
+		strDuploGC.append(" Complex op: " + to_string(x) + " " + to_string(y) + " " + to_string(dest) + " " + to_string(op) + " " + to_string(length) + "\n");		
+		printf("ERROR: exist a complex gate which DUPLO-Frigate cannot handle => Suggest to write your .wir in deffirent way");
+		exit(EXIT_FAILURE);	
 	}  
 }
 
@@ -4165,8 +4166,10 @@ void writeComplexGate(short op, int dest, int x, int y, int length, int carryadd
 	//duplo
 	if (isPrintDuploGC) 
 	{
-		strDuploGC.append(" Complex op: " + to_string(x) + " " + to_string(y) + " " + to_string(dest) + " " + to_string(op) + " " + to_string(length) + "\n");
-		strDuploGC.append("todo\n");
+		strDuploGC.append(" Complex op: " + to_string(x) + " " + to_string(y) + " " + to_string(dest) + " " + to_string(op) + " " + to_string(length) + "\n");	
+		
+		printf("ERROR: exist a complex gate which DUPLO-Frigate cannot handle => Suggest to write your .wir in deffirent way");
+		exit(EXIT_FAILURE);		
 	}  
 }
 
