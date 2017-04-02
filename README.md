@@ -47,12 +47,12 @@ We extend the [`Frigate`](https://bitbucket.org/bmood/frigaterelease) compiler t
 	-aes 		embed the [`S-Box`](http://www.cs.yale.edu/homes/peralta/CircuitStuff/CMT.html) circuit to generate AES circuits efficiently
 	-rand		generate a random component subcircuit to finding "sweet spot" for DUPLO
 ##### Example:
-	./frigate ./circuits/test.wir -dp
+	./Frigate ./circuits/test.wir -dp
 ##### Generate AES 
-	./frigate ./circuits/aes/p1_aes.wir -dp -aes
+	./Frigate ./circuits/aes/p1_aes.wir -dp -aes
 
 ##### Generate random circuits
-	./frigate ./circuits/randomcCircuits/p12_1_test.wir -dp -rand
+	./Frigate ./circuits/randomcCircuits/p12_1_test.wir -dp -rand
 	
 #### DUPLO circuit format: 
 Each file .GC_Duplo consists of:
