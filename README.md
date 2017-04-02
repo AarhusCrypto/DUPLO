@@ -50,6 +50,7 @@ We extend the [`Frigate`](https://bitbucket.org/bmood/frigaterelease) compiler t
 	./Frigate ./circuits/test.wir -dp
 ##### Generate AES 
 	./Frigate ./circuits/aes/p1_aes.wir -dp -aes
+NOTE: In order to build a program using the -aes flag, the working_dir must the the root of the project, i.e. (DUPLO), else our compiler cannot find the custom s-box circuit that we provide.
 
 ##### Generate random circuits
 	./Frigate ./circuits/randomcCircuits/p12_1_test.wir -dp -rand
