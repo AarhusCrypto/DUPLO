@@ -21,10 +21,10 @@ out
 *.ffrig
 *.mfrig
 *.wir.*
+*.txtGC
 !test/data/p1_aes.wir.GC_duplo
 !test/data/p32_aes.wir.GC_duplo
-SLP_AES_113.txtGC
-frigate
+frigate/frigate
 location.hh
 parser.cc
 parser.hh

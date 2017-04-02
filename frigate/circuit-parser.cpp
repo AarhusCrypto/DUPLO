@@ -881,7 +881,7 @@ Circuit read_text_sBoxYale()
 {
 	FILE* file;
 	size_t file_size;
-	const char* circuit_file = "tests/duplo/SLP_AES_113.txt";
+	const char* circuit_file = "frigate/circuits/aes/SLP_AES_113.txt";
 	file = fopen(circuit_file, "r");
 
 	std::string str(circuit_file);
