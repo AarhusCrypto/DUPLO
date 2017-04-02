@@ -39,5 +39,6 @@ Each file .GC_Duplo consists of:
 2. A second line defining the length (in bits) of constructor's input, evaluator's input, the size of total output, the size of construtor's output, and the size of evaluator's output
 3. Each function starts at "FN" and ends at "--end FN #id--". The first line of the function shows the function index, the length of input, the length of output, the number of wires, the number of non-xor gate, and the number of gates.
 4. Gate operation: 
+	input_wire_1 input_wire_2 output_wire gate_operation
 
 

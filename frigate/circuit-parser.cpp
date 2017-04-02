@@ -372,7 +372,7 @@ bool frigate_ParseComposedCircuit(char raw_circuit[]) {
 		fDuplo << ".wir have a wrong format!\n";
 		fDuplo << "fix: refactoring main function that contains ONLY function calls\n";
 		cout << "fDuplo.close()\n";
-		cout << "Error: .wir have a wrong format!\n";
+		cout << "Error: .wir has a wrong format!\n";
 		cout << "fix: refactoring main function that contains ONLY function calls\n";
 		fDuplo.close();
 		return false;
@@ -882,7 +882,6 @@ Circuit read_text_sBoxYale()
 	FILE* file;
 	size_t file_size;
 	const char* circuit_file = "tests/duplo/SLP_AES_113.txt";
-	//const char* circuit_file = "tests/dp/AES_Sbox.txt";
 	file = fopen(circuit_file, "r");
 
 	std::string str(circuit_file);
