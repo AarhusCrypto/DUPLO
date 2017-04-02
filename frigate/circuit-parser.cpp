@@ -338,7 +338,7 @@ bool frigate_ParseComposedCircuit(char raw_circuit[]) {
 		
 			fDuplo << head_func;
 			fDuplo << strFunction[it->first - 1];
-			fDuplo << "--end FN " << it->second << " -- \n\n";
+			fDuplo << "--end FN " << it->second << "-- \n\n";
 
 			auto aa = to_string(it->second);		
 			fFuncs.open(dir +"."+  circuits[it->first - 1].circuit_name);
