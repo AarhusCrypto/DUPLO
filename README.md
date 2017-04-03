@@ -37,8 +37,8 @@ To clone, build and test the code:
 * ./cmake-release.sh
 * ./build/release/TestDUPLO
 
-## Frigate Extension Compiler (used for Duplo)
-We extend the [`Frigate`](https://bitbucket.org/bmood/frigaterelease) compiler that allows to transform a high-level C-style program into a set of boolean circuit components that can be fed to the DUPLO system for secure computation.
+## Frigate Extension Compiler
+The [`Frigate`](https://bitbucket.org/bmood/frigaterelease) compiler transforms a C-style program into a bolean circuit. We here provide an extension of this work that in addition can output a set of boolean circuits along with an appropriate soldering description that can be fed to the DUPLO system for secure computation of the original source program.
 
 ### Running the compiler
 	
@@ -50,7 +50,7 @@ We extend the [`Frigate`](https://bitbucket.org/bmood/frigaterelease) compiler t
 	./Frigate ./circuits/test.wir -dp
 ##### Generate AES 
 	./Frigate ./circuits/aes/p1_aes.wir -dp -aes
-NOTE: In order to build a program using the -aes flag, the working_dir must the the root of the project, i.e. (DUPLO), else our compiler cannot find the custom s-box circuit that we provide.
+NOTE: In order to build a program using the -aes flag, the $curr_working_dir must the the root of the project, i.e. (DUPLO), else our compiler cannot find the custom s-box circuit that we provide.
 
 ##### Generate random circuits
 	./Frigate ./circuits/randomcCircuits/p12_1_test.wir -dp -rand
@@ -62,3 +62,21 @@ Each file .GC_Duplo consists of:
 3. Each function starts at "FN" and ends at "--end FN #id--". The first line of the function shows the function index, the length of input, the length of output, the number of wires, the number of non-xor gate, and the number of gates.
 4. Gate operation: 
 	input_wire_1 input_wire_2 output_wire gate_operation
+
+gate_operation legend:
+* "0000" :  constant 0
+* "0001" :  NOR
+* "0010" :  (NOT left) AND right
+* "0011" :  NOT left-wire
+* "0100" :  left AND (NOT right)
+* "0101" :  NOT right-wire
+* "0110" :  XOR
+* "0111" :  NAND
+* "1000" :  AND
+* "1001" :  NXOR
+* "1010" :  right identity
+* "1011" :  (NOT left) OR right
+* "1100" :  left identity
+* "1101" :  left OR (NOT right)
+* "1110" :  OR
+* "1111" :  constant 1
