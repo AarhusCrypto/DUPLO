@@ -64,19 +64,19 @@ Each file .GC_Duplo consists of:
 	input_wire_1 input_wire_2 output_wire gate_operation
 
 gate_operation legend:
-* "0000" :  constant 0
-* "0001" :  NOR
-* "0010" :  (NOT left) AND right
-* "0011" :  NOT left-wire
-* "0100" :  left AND (NOT right)
-* "0101" :  NOT right-wire
-* "0110" :  XOR
-* "0111" :  NAND
-* "1000" :  AND
-* "1001" :  NXOR
-* "1010" :  right identity
-* "1011" :  (NOT left) OR right
-* "1100" :  left identity
-* "1101" :  left OR (NOT right)
-* "1110" :  OR
-* "1111" :  constant 1
+* "0000"	: constant 0 //Never generated explicitly, supported through other means (XOR).
+* "0001"	: NOR
+* "0010"	: (NOT left) AND right
+* "0011"	: NOT left-wire
+* "0100"	: left AND (NOT right)
+* "0101"	: NOT right-wire
+* "0110"	: XOR
+* "0111" 	: NAND
+* "1000" 	: AND
+* "1001" 	: NXOR
+* "1010" 	: right identity
+* "1011" 	: (NOT left) OR right
+* "1100" 	: left identity
+* "1101" 	: left OR (NOT right)
+* "1110" 	: OR
+* "1111" 	: constant 1 //Never generated explicitly, supported through other means (XOR + NOT).
