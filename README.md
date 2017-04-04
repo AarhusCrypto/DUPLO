@@ -39,6 +39,7 @@ To clone, build and test the code:
 
 ## Frigate Extension Compiler
 The [`Frigate`](https://bitbucket.org/bmood/frigaterelease) compiler transforms a C-style program into a bolean circuit. We here provide an extension of this work that in addition can output a set of boolean circuits along with an appropriate soldering description that can be fed to the DUPLO system for secure computation of the original source program.
+
 **NOTE:** For programs specifying distinct output to the parties the compiler cannot handle all cases correctly.
 * If only a single party receives the output it always works.
 * If one party receives the entire output and another party receives only a subset it works as well.
