@@ -314,7 +314,7 @@ bool frigate_ParseComposedCircuit(char raw_circuit[]) {
 	
 	
 		fDuplo << real_functions.size()  << " " << functions_duplo.size() << "\n";//" // #numberfunction   #numberComponent\n";
-		fDuplo << num_const_inp_wires << " " << num_eval_inp_wires << " " << num_const_out_wires << " " << num_const_out_wires << " " << num_eval_out_wires << "\n\n";// " //#input_eval #input_const #output_eval #output_const\n\n";	
+		fDuplo << num_const_inp_wires << " " << num_eval_inp_wires << " " << std::max(num_const_out_wires, num_eval_out_wires) << " " << num_const_out_wires << " " << num_eval_out_wires << "\n\n";// " //#input_eval #input_const #output_eval #output_const\n\n";	
 
 		int id = 1;
 
