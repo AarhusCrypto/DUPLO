@@ -40,6 +40,11 @@ To clone, build and test the code:
 ## Frigate Extension Compiler
 The [`Frigate`](https://bitbucket.org/bmood/frigaterelease) compiler transforms a C-style program into a bolean circuit. We here provide an extension of this work that in addition can output a set of boolean circuits along with an appropriate soldering description that can be fed to the DUPLO system for secure computation of the original source program.
 
+**NOTE:** For programs specifying distinct output to the parties the compiler cannot handle all cases correctly.
+* If only a single party receives the output it always works.
+* If one party receives the entire output and another party receives only a subset it works as well.
+* However for the case of the parties receiving _individual_ output the output header and final output wires might be incorrect. In this case manually modifying the output .GC_duplo file can be done fairly straightforward.
+
 ### Running the compiler
 	
 #### Flags:
@@ -47,13 +52,13 @@ The [`Frigate`](https://bitbucket.org/bmood/frigaterelease) compiler transforms 
 	-aes 		embed the [`S-Box`](http://www.cs.yale.edu/homes/peralta/CircuitStuff/CMT.html) circuit to generate AES circuits efficiently
 	-rand		generate a random component subcircuit to finding "sweet spot" for DUPLO
 ##### Example:
-	./Frigate ./circuits/test.wir -dp
+	./build/release/Frigate ./frigate/circuits/test.wir -dp
 ##### Generate AES 
-	./Frigate ./circuits/aes/p1_aes.wir -dp -aes
+	./build/release/Frigate ./frigate/circuits/aes/p1_aes.wir -dp -aes
 NOTE: In order to build a program using the -aes flag, the $curr_working_dir must the the root of the project, i.e. (DUPLO), else our compiler cannot find the custom s-box circuit that we provide.
 
 ##### Generate random circuits
-	./Frigate ./circuits/randomcCircuits/p12_1_test.wir -dp -rand
+	./build/release/Frigate ./frigate/circuits/randomcCircuits/p12_1_test.wir -dp -rand
 	
 #### DUPLO circuit format: 
 Each file .GC_Duplo consists of:
