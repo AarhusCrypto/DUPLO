@@ -373,7 +373,7 @@ void DuploConstructor::CommitGarbleAndCutAndChoose(uint32_t exec_id, Circuit& ci
   GarblingHandler gh;
   ConstGarbledCircuit tmp_garbled_circuit(circuit);
 
-  BYTEArrayVector garb_circuit_hashes(exec_num_total_garbled, CSEC_BYTES);
+  BYTEArrayVector garb_circuit_hashes(exec_num_total_garbled, osuCrypto::SHA1::HashSize);
   BYTEArrayVector out_wire_commit_corrections(num_out_keys, CSEC_BYTES);
 
   //Do all GARBLING and HASHING of circuits

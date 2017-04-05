@@ -26,11 +26,10 @@ public:
 };
 
 static void HashGarbledCircuitTables(Circuit& circuit, uint8_t garbled_tables[], uint8_t garbled_hash[]) {
-
-  std::fill(garbled_hash, garbled_hash + CSEC_BYTES, 0);
-  for (int i = 0; i < 2 * circuit.num_non_free_gates; ++i) {
-    XOR_128(garbled_hash, garbled_tables + i * CSEC_BYTES);
-  }
+  
+  osuCrypto::SHA1 sha;
+  sha.Update(garbled_tables, 2 * circuit.num_non_free_gates * CSEC_BYTES);
+  sha.Final(garbled_hash);
 };
 
 static __m128i zero_one_key[] = {_mm_setzero_si128(), _mm_set1_epi32(0xFFFFFFFF)};

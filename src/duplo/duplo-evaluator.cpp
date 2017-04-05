@@ -133,7 +133,7 @@ void DuploEvaluator::PreprocessComponentType(std::string component_type, Circuit
 
   std::vector<EvalGarbledCircuit> aux_garbled_circuits_data(num_eval_circuits, EvalGarbledCircuit(circuit, 0));
 
-  BYTEArrayVector eval_hash(num_eval_circuits, CSEC_BYTES);
+  BYTEArrayVector eval_hash(num_eval_circuits, osuCrypto::SHA1::HashSize);
 
   for (int exec_id = 0; exec_id < num_parallel_execs; ++exec_id) {
 
@@ -470,7 +470,7 @@ void DuploEvaluator::CommitReceiveAndCutAndChoose(uint32_t exec_id, Circuit & ci
   BYTEArrayVector out_wire_commit_corrections(num_out_keys, CSEC_BYTES);
   exec_channels[exec_id]->recv(out_wire_commit_corrections.data(), out_wire_commit_corrections.size());
 
-  BYTEArrayVector garb_circuit_hashes(exec_num_total_garbled, CSEC_BYTES);
+  BYTEArrayVector garb_circuit_hashes(exec_num_total_garbled, osuCrypto::SHA1::HashSize);
   exec_channels[exec_id]->recv(garb_circuit_hashes.data(), garb_circuit_hashes.size());
 
   //Sample and send challenge seed
@@ -537,7 +537,7 @@ void DuploEvaluator::CommitReceiveAndCutAndChoose(uint32_t exec_id, Circuit & ci
   GarblingHandler gh;
   EvalGarbledCircuit cnc_garbled_circuit(circuit);
 
-  BYTEArrayVector cnc_garb_circuit_hashes(num_checked_circuits, CSEC_BYTES);
+  BYTEArrayVector cnc_garb_circuit_hashes(num_checked_circuits, osuCrypto::SHA1::HashSize);
   BYTEArrayVector output_keys(circuit.num_out_wires, CSEC_BYTES);
   BYTEArrayVector decommitted_output_keys(circuit.num_out_wires, CSEC_BYTES);
 
@@ -589,7 +589,7 @@ void DuploEvaluator::CommitReceiveAndCutAndChoose(uint32_t exec_id, Circuit & ci
       }
 
       // Finally check that the comitted tables match the cnc constructed tables by comparing the hash
-      if (!std::equal(cnc_garb_circuit_hashes[current_check_circuit_idx], cnc_garb_circuit_hashes[current_check_circuit_idx] + CSEC_BYTES, garb_circuit_hashes[i])) {
+      if (!std::equal(cnc_garb_circuit_hashes[current_check_circuit_idx], cnc_garb_circuit_hashes[current_check_circuit_idx + 1], garb_circuit_hashes[i])) {
         std::cout << "Abort, garbled tables wrongly constructed. Hash doesn't match!" << std::endl;
         throw std::runtime_error("Abort, garbled tables wrongly constructed. Hash doesn't match!");
       }
@@ -894,13 +894,13 @@ void DuploEvaluator::BucketAndReceiveEvalCircuits(std::string component_type, ui
   BYTEArrayVector exec_received_garbled_tables(exec_num_eval_circuits, garbled_table_size);
   exec_channels[exec_id]->recv(exec_received_garbled_tables.data(), exec_received_garbled_tables.size());
 
-  uint8_t hash_value[CSEC_BYTES] = {0};
+  uint8_t hash_value[osuCrypto::SHA1::HashSize];
   PermutedIndex<EvalGarbledCircuit> exec_permuted_aux_info(aux_garbled_circuits_data, permuted_eval_ids_inv, exec_buckets_from * bucket_size, total_eval_aux_size);
   for (int i = 0; i < exec_num_eval_circuits; ++i) {
     uint32_t global_circuit_index = exec_buckets_from * bucket_size + i;
 
     HashGarbledCircuitTables(circuit, exec_received_garbled_tables[i], hash_value);
-    if (!std::equal(hash_value, hash_value + CSEC_BYTES, eval_hash[permuted_eval_ids_inv[global_circuit_index]])) {
+    if (!std::equal(hash_value, hash_value + osuCrypto::SHA1::HashSize, eval_hash[permuted_eval_ids_inv[global_circuit_index]])) {
       std::cout << "Abort, wrong eval garbled tables sent. Hash doesn't match!" << std::endl;
       throw std::runtime_error("Abort, wrong eval garbled tables sent. Hash doesn't match!");
     }
