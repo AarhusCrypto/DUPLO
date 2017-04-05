@@ -41,7 +41,7 @@ private:
 
   void PrepareInputWireAuthenticators(uint64_t num_input_auth_buckets, uint32_t num_parallel_execs);
 
-  void CommitCircuitAuthAndCutAndChoose(uint32_t exec_id, uint32_t exec_num_auths, uint32_t check_factor, bool negate_check_factor, uint32_t exec_eval_auths_from, uint32_t exec_eval_auths_to, std::vector<BYTEArrayVector>& eval_auths, BYTEArrayVector& aux_auth_data, std::vector<uint32_t>& aux_auth_ids, uint8_t aux_auth_delta_data[], std::tuple<std::mutex&, std::condition_variable&, bool&>& delta_signal);
+  void CommitCircuitAuthAndCutAndChoose(uint32_t exec_id, uint32_t exec_num_auths, uint32_t check_factor, bool negate_check_factor, uint32_t exec_eval_auths_from, uint32_t exec_eval_auths_to, std::vector<BYTEArrayVector>& eval_auths, BYTEArrayVector& aux_auth_data, std::vector<uint32_t>& aux_auth_ids, uint8_t aux_auth_delta_data[], std::tuple<std::mutex&, std::condition_variable&, std::atomic<bool>&>& delta_signal);
 
   void CommitInputAuthAndCutAndChoose(uint32_t exec_id, uint32_t exec_num_total_garbled, uint32_t check_factor, bool negate_check_factor, uint32_t exec_eval_circuits_from, uint32_t exec_eval_circuits_to, std::vector<EvalGarbledCircuit>& aux_garbled_circuits_data);
 

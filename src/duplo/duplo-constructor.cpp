@@ -627,8 +627,8 @@ void DuploConstructor::PrepareOutputWireAuthenticators(uint32_t num_parallel_exe
 
   std::mutex delta_updated_mutex;
   std::condition_variable delta_updated_cond_val;
-  bool delta_updated = false;
-  std::tuple<std::mutex&, std::condition_variable&, bool&> delta_signal = make_tuple(std::ref(delta_updated_mutex), std::ref(delta_updated_cond_val), std::ref(delta_updated));
+  std::atomic<bool> delta_updated(false);
+  std::tuple<std::mutex&, std::condition_variable&, std::atomic<bool>&> delta_signal = make_tuple(std::ref(delta_updated_mutex), std::ref(delta_updated_cond_val), std::ref(delta_updated));
 
   std::vector<std::future<void>> execs_finished(num_parallel_execs);
   for (int exec_id = 0; exec_id < num_parallel_execs; ++exec_id) {
@@ -822,7 +822,7 @@ void DuploConstructor::PrepareInputWireAuthenticators(uint64_t num_input_auth_bu
 
 }
 
-void DuploConstructor::CommitCircuitAuthAndCutAndChoose(uint32_t exec_id, uint32_t exec_num_auths, uint32_t check_factor, bool negate_check_factor, uint32_t exec_eval_auths_from, uint32_t exec_eval_auths_to, std::vector<BYTEArrayVector>& aux_auth_data, BYTEArrayVector & aux_auth_delta_data, std::tuple<std::mutex&, std::condition_variable&, bool&>& delta_signal) {
+void DuploConstructor::CommitCircuitAuthAndCutAndChoose(uint32_t exec_id, uint32_t exec_num_auths, uint32_t check_factor, bool negate_check_factor, uint32_t exec_eval_auths_from, uint32_t exec_eval_auths_to, std::vector<BYTEArrayVector>& aux_auth_data, BYTEArrayVector & aux_auth_delta_data, std::tuple<std::mutex&, std::condition_variable&, std::atomic<bool>&>& delta_signal) {
 
   //If this is exec_id == 0 we produce one delta commitment.
   uint32_t num_commit_keys;
@@ -840,17 +840,24 @@ void DuploConstructor::CommitCircuitAuthAndCutAndChoose(uint32_t exec_id, uint32
   //Commit to the input/output wires and Deltas of all garbled circuits.
   commit_senders[exec_id].Commit(commit_keys_share, *exec_channels[exec_id], exec_num_auths);
 
+  //If not execution 0, wait until execution 0 has put the delta commitment into aux_auth_delta_data
   std::condition_variable& delta_updated_cond_val = std::get<1>(delta_signal);
-  bool& delta_updated = std::get<2>(delta_signal);
+  std::atomic<bool>& delta_updated = std::get<2>(delta_signal);
 
   if (exec_id == 0) {
     std::copy(commit_keys_share[0][num_commit_keys - 1], commit_keys_share[0][num_commit_keys], aux_auth_delta_data[0]);
     std::copy(commit_keys_share[1][num_commit_keys - 1], commit_keys_share[1][num_commit_keys], aux_auth_delta_data[1]);
-    delta_updated = true;
+    
+    {
+      std::lock_guard<std::mutex> lk(std::get<0>(delta_signal));
+      delta_updated = true;
+    }
     delta_updated_cond_val.notify_all();
   } else {
+
     std::mutex& delta_updated_mutex = std::get<0>(delta_signal);
     std::unique_lock<std::mutex> lock(delta_updated_mutex);
+
     while (!delta_updated) {
       delta_updated_cond_val.wait(lock);
     }
