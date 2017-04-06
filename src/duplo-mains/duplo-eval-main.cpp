@@ -5,8 +5,8 @@ int main(int argc, const char* argv[]) {
   ezOptionParser opt;
 
   opt.overview = "DuploEvaluator Passing Parameters Guide.";
-  opt.syntax = "Duploeval first second third forth fifth sixth";
-  opt.example = "Duploeval -n 4 -c aes -e 8,2,1 -ip 10.11.100.216 -p 28001 \n\n";
+  opt.syntax = "DuploEvaluator first second third forth fifth sixth";
+  opt.example = "DuploEvaluator -n 4 -c aes -e 8,2,1 -ip 10.11.100.216 -p 28001 \n\n";
   opt.footer = "ezOptionParser 0.1.4  Copyright (C) 2011 Remik Ziemlinski\nThis program is free and without warranty.\n";
 
   opt.add(
@@ -285,10 +285,10 @@ int main(int argc, const char* argv[]) {
 
   std::cout << "=============================" << std::endl;
 
-  std::cout << "Ind. Preprocess ms: "
+  std::cout << "Preprocess ms: "
             << (double) (preprocess_time_nano + prepare_eval_time_nano) / num_iters / 1000000
             << ", data sent: " << (double) (preprocess_data_sent + prepare_data_sent) / num_iters / 1000 << " kB" << std::endl;
-  std::cout << "D. Preprocess ms: " << (double) build_time_nano / num_iters / 1000000 << ", data sent: " << (double) build_data_sent / num_iters / 1000 << " kB" << std::endl;
+  std::cout << "Build ms: " << (double) build_time_nano / num_iters / 1000000 << ", data sent: " << (double) build_data_sent / num_iters / 1000 << " kB" << std::endl;
 
   std::cout << "Online ms: " << (double) (eval_circuits_nano + decode_keys_nano) / num_iters / 1000000
             << ", data sent: " << (double) (eval_data_sent + decode_data_sent) / num_iters / 1000 << " kB" << std::endl;
