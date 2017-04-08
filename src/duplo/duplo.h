@@ -8,8 +8,8 @@
 #include "duplo-util/storage.h"
 
 //For libOTe extension
-#include "cryptoTools/Network/BtChannel.h"
-#include "cryptoTools/Network/BtEndpoint.h"
+#include "cryptoTools/Network/Channel.h"
+#include "cryptoTools/Network/Endpoint.h"
 #include "cryptoTools/Crypto/PRNG.h"
 #include "libOTe/Base/naor-pinkas.h"
 
@@ -58,10 +58,10 @@ public:
   std::unordered_map<std::string, Circuit> string_to_circuit_map;
   std::unordered_map<std::string, ComposedCircuit> string_to_composed_circuit_map;
 
-  osuCrypto::BtIOService ios;
-  osuCrypto::BtEndpoint end_point;
-  osuCrypto::Channel* chan;
-  std::vector<osuCrypto::Channel*> exec_channels;
+  osuCrypto::IOService ios;
+  osuCrypto::Endpoint end_point;
+  osuCrypto::Channel chan;
+  std::vector<osuCrypto::Channel> exec_channels;
 
   std::mutex state_mutex;
 

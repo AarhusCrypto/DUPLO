@@ -10,10 +10,10 @@ DuploEvaluator::DuploEvaluator(uint8_t seed[], uint32_t num_max_parallel_execs, 
 
 DuploEvaluator::~DuploEvaluator() {
 
-  chan->close();
+  chan.close();
 
   for (int e = 0; e < exec_channels.size(); ++e) {
-    exec_channels[e]->close();
+    exec_channels[e].close();
   }
 
   end_point.stop();
@@ -21,12 +21,12 @@ DuploEvaluator::~DuploEvaluator() {
 
 void DuploEvaluator::Connect(std::string ip_address, uint16_t port) {
 
-  end_point.start(ios, ip_address, port, false, "ep");
+  end_point.start(ios, ip_address, port, osuCrypto::EpMode::Client, "ep");
 
-  chan = &end_point.addChannel("chan", "chan");
+  chan = end_point.addChannel("chan", "chan");
 
   for (int e = 0; e < commit_receivers.size(); ++e) {
-    exec_channels.emplace_back(&end_point.addChannel("exec_channel_" + std::to_string(e), "exec_channel_" + std::to_string(e)));
+    exec_channels.emplace_back(end_point.addChannel("exec_channel_" + std::to_string(e), "exec_channel_" + std::to_string(e)));
   }
 }
 
@@ -38,7 +38,7 @@ void DuploEvaluator::Setup() {
 
   osuCrypto::NaorPinkas baseOTs;
 
-  baseOTs.send(base_ots, rnd, *chan, 1);
+  baseOTs.send(base_ots, rnd, chan, 1);
 
   //Extended the base ots and set them for each dot_receiver
   osuCrypto::KosDotExtReceiver temp_dot_reciever;
@@ -60,7 +60,7 @@ void DuploEvaluator::Setup() {
   //Run kos OTX and store the resulting NUM_COMMIT_SEED_OT OTs appropriately
   commit_seed_choices.randomize(rnd);
 
-  kos_receiver.receive(commit_seed_choices, commit_seed_OTs, rnd, *chan);
+  kos_receiver.receive(commit_seed_choices, commit_seed_OTs, rnd, chan);
 
   //Setup tmp commit_receiver
   SplitCommitReceiver string_tmp_receiver;
@@ -78,7 +78,7 @@ void DuploEvaluator::Setup() {
   string_tmp_receiver.GetCloneReceivers(commit_receivers.size(), rnd, commit_receivers, exec_rnds);
 
   BYTEArrayVector recov_share(1, CODEWORD_BYTES);
-  string_tmp_receiver.Commit(recov_share, rnd, *chan);
+  string_tmp_receiver.Commit(recov_share, rnd, chan);
 
   persistent_storage.PrepareFile(EVAL_RECOV_PREFIX, RECOV, recov_share.size());
   persistent_storage.WriteBuckets(EVAL_RECOV_PREFIX, RECOV, 0, 1, recov_share.data(), 0, recov_share.size(), 1);
@@ -175,7 +175,7 @@ void DuploEvaluator::PreprocessComponentType(std::string component_type, Circuit
 
   uint8_t bucket_seed[CSEC_BYTES];
   rnd.get<uint8_t>(bucket_seed, CSEC_BYTES);
-  chan->asyncSendCopy(bucket_seed, CSEC_BYTES);
+  chan.asyncSendCopy(bucket_seed, CSEC_BYTES);
 
   std::vector<uint32_t> permuted_eval_ids(num_eval_circuits);
   std::vector<uint32_t> permuted_eval_ids_inv(num_eval_circuits);
@@ -431,7 +431,7 @@ void DuploEvaluator::DecodeKeys(ComposedCircuit & composed_circuit, std::vector<
         }
       }
 
-      SafeAsyncSend(*exec_channels[exec_id], exec_const_output_keys);
+      exec_channels[exec_id].send(exec_const_output_keys.data(), exec_const_output_keys.size());
 
       std::vector<osuCrypto::BitVector> output_decodings;
       if (!DecommitOutPermBits(exec_id, out_components, eval_outputs, out_components_from[exec_id], out_components_to[exec_id], output_decodings, non_interactive)) {
@@ -462,22 +462,22 @@ void DuploEvaluator::CommitReceiveAndCutAndChoose(uint32_t exec_id, Circuit & ci
   BYTEArrayVector commit_keys_share(num_commit_keys, CODEWORD_BYTES);
 
   //Commit to keys
-  if (!commit_receivers[exec_id].Commit(commit_keys_share, exec_rnds[exec_id], *exec_channels[exec_id], deltas_idx)) {
+  if (!commit_receivers[exec_id].Commit(commit_keys_share, exec_rnds[exec_id], exec_channels[exec_id], deltas_idx)) {
     std::cout << "Abort, key commit failed!" << std::endl;;
     throw std::runtime_error("Abort, key commit failed!");
   }
 
   BYTEArrayVector out_wire_commit_corrections(num_out_keys, CSEC_BYTES);
-  exec_channels[exec_id]->recv(out_wire_commit_corrections.data(), out_wire_commit_corrections.size());
+  exec_channels[exec_id].recv(out_wire_commit_corrections.data(), out_wire_commit_corrections.size());
 
   BYTEArrayVector garb_circuit_hashes(exec_num_total_garbled, osuCrypto::SHA1::HashSize);
-  exec_channels[exec_id]->recv(garb_circuit_hashes.data(), garb_circuit_hashes.size());
+  exec_channels[exec_id].recv(garb_circuit_hashes.data(), garb_circuit_hashes.size());
 
   //Sample and send challenge seed
   uint8_t cnc_seed[CSEC_BYTES];
   rnd.get<uint8_t>(cnc_seed, CSEC_BYTES);
 
-  exec_channels[exec_id]->asyncSendCopy(cnc_seed, CSEC_BYTES);
+  exec_channels[exec_id].asyncSendCopy(cnc_seed, CSEC_BYTES);
 
   //Select challenge circuits based on cnc_seed
   osuCrypto::BitVector cnc_check_circuits(exec_num_total_garbled);
@@ -493,7 +493,7 @@ void DuploEvaluator::CommitReceiveAndCutAndChoose(uint32_t exec_id, Circuit & ci
   BYTEArrayVector cnc_keys_share(cnc_num_commit_keys, CODEWORD_BYTES);
 
   osuCrypto::BitVector perm_bits(cnc_num_commit_keys);
-  exec_channels[exec_id]->recv(perm_bits);
+  exec_channels[exec_id].recv(perm_bits);
 
   uint32_t current_check_circuit_idx = 0;
   uint32_t current_eval_circuit_idx = exec_eval_circuits_from;
@@ -527,9 +527,9 @@ void DuploEvaluator::CommitReceiveAndCutAndChoose(uint32_t exec_id, Circuit & ci
 
   //Receive postulated values
   BYTEArrayVector cnc_keys(cnc_num_commit_keys, CSEC_BYTES);
-  exec_channels[exec_id]->recv(cnc_keys.data(), cnc_keys.size());
+  exec_channels[exec_id].recv(cnc_keys.data(), cnc_keys.size());
 
-  if (!commit_receivers[exec_id].BatchDecommit(cnc_keys_share, cnc_keys, exec_rnds[exec_id], *exec_channels[exec_id], true)) {
+  if (!commit_receivers[exec_id].BatchDecommit(cnc_keys_share, cnc_keys, exec_rnds[exec_id], exec_channels[exec_id], true)) {
     std::cout << "Abort, cut-and-choose decommit failed!" << std::endl;
     throw std::runtime_error("Abort, cut-and-choose decommit failed!");
   }
@@ -727,7 +727,7 @@ void DuploEvaluator::PrepareOutputWireAuthenticators(uint32_t num_parallel_execs
 
   uint8_t bucket_seed[CSEC_BYTES];
   rnd.get<uint8_t>(bucket_seed, CSEC_BYTES);
-  chan->asyncSendCopy(bucket_seed, CSEC_BYTES);
+  chan.asyncSendCopy(bucket_seed, CSEC_BYTES);
 
   osuCrypto::PRNG bucket_rnd;
   bucket_rnd.SetSeed(load_block(bucket_seed));
@@ -830,7 +830,7 @@ void DuploEvaluator::PrepareInputWireAuthenticators(uint64_t num_input_auth_buck
 
   uint8_t bucket_seed[CSEC_BYTES];
   rnd.get<uint8_t>(bucket_seed, CSEC_BYTES);
-  chan->asyncSendCopy(bucket_seed, CSEC_BYTES);
+  chan.asyncSendCopy(bucket_seed, CSEC_BYTES);
 
   osuCrypto::PRNG bucket_rnd;
   bucket_rnd.SetSeed(load_block(bucket_seed));
@@ -892,7 +892,7 @@ void DuploEvaluator::BucketAndReceiveEvalCircuits(std::string component_type, ui
 
   //Receive all garbled tables
   BYTEArrayVector exec_received_garbled_tables(exec_num_eval_circuits, garbled_table_size);
-  exec_channels[exec_id]->recv(exec_received_garbled_tables.data(), exec_received_garbled_tables.size());
+  exec_channels[exec_id].recv(exec_received_garbled_tables.data(), exec_received_garbled_tables.size());
 
   uint8_t hash_value[osuCrypto::SHA1::HashSize];
   PermutedIndex<EvalGarbledCircuit> exec_permuted_aux_info(aux_garbled_circuits_data, permuted_eval_ids_inv, exec_buckets_from * bucket_size, total_eval_aux_size);
@@ -921,7 +921,7 @@ void DuploEvaluator::CommitCircuitAuthAndCutAndChoose(uint32_t exec_id, uint32_t
 
   BYTEArrayVector commit_keys_share(num_commit_keys, CODEWORD_BYTES);
 
-  if (!commit_receivers[exec_id].Commit(commit_keys_share, exec_rnds[exec_id], *exec_channels[exec_id], exec_num_auths)) {
+  if (!commit_receivers[exec_id].Commit(commit_keys_share, exec_rnds[exec_id], exec_channels[exec_id], exec_num_auths)) {
     std::cout << "Abort, key commit failed!" << std::endl;;
     throw std::runtime_error("Abort, key commit failed!");
   }
@@ -953,12 +953,12 @@ void DuploEvaluator::CommitCircuitAuthAndCutAndChoose(uint32_t exec_id, uint32_t
 
   BYTEArrayVector auths(2 * exec_num_auths, CSEC_BYTES);
 
-  exec_channels[exec_id]->recv(auths.data(), auths.size());
+  exec_channels[exec_id].recv(auths.data(), auths.size());
 
   //Sample and send challenge seed
   uint8_t cnc_seed[CSEC_BYTES];
   exec_rnds[exec_id].get<uint8_t>(cnc_seed, CSEC_BYTES);
-  exec_channels[exec_id]->asyncSendCopy(cnc_seed, CSEC_BYTES);
+  exec_channels[exec_id].asyncSendCopy(cnc_seed, CSEC_BYTES);
 
   //Select challenge auths based on cnc_seed
   osuCrypto::BitVector cnc_check_auths(exec_num_auths);
@@ -992,8 +992,8 @@ void DuploEvaluator::CommitCircuitAuthAndCutAndChoose(uint32_t exec_id, uint32_t
   }
 
   BYTEArrayVector cnc_keys(cnc_num_auths, CSEC_BYTES);
-  exec_channels[exec_id]->recv(cnc_keys.data(), cnc_keys.size());
-  if (!commit_receivers[exec_id].BatchDecommit(cnc_keys_share, cnc_keys, exec_rnds[exec_id], *exec_channels[exec_id], true)) {
+  exec_channels[exec_id].recv(cnc_keys.data(), cnc_keys.size());
+  if (!commit_receivers[exec_id].BatchDecommit(cnc_keys_share, cnc_keys, exec_rnds[exec_id], exec_channels[exec_id], true)) {
     std::cout << "Abort, auth cut-and-choose decommit failed!" << std::endl;
     throw std::runtime_error("Abort, auth cut-and-choose decommit failed!");
   }
@@ -1047,21 +1047,21 @@ void DuploEvaluator::CommitInputAuthAndCutAndChoose(uint32_t exec_id, uint32_t e
   BYTEArrayVector commit_keys_share(num_commit_keys, CODEWORD_BYTES);
 
   //Commit to keys
-  if (!commit_receivers[exec_id].Commit(commit_keys_share, exec_rnds[exec_id], *exec_channels[exec_id], deltas_idx)) {
+  if (!commit_receivers[exec_id].Commit(commit_keys_share, exec_rnds[exec_id], exec_channels[exec_id], deltas_idx)) {
     std::cout << "Abort, key commit failed!" << std::endl;;
     throw std::runtime_error("Abort, key commit failed!");
   }
 
   BYTEArrayVector inp_wire_commit_corrections(num_inp_keys, CSEC_BYTES);
-  exec_channels[exec_id]->recv(inp_wire_commit_corrections.data(), inp_wire_commit_corrections.size());
+  exec_channels[exec_id].recv(inp_wire_commit_corrections.data(), inp_wire_commit_corrections.size());
 
   BYTEArrayVector auths(2 * exec_num_total_garbled, CSEC_BYTES);
-  exec_channels[exec_id]->recv(auths.data(), auths.size());
+  exec_channels[exec_id].recv(auths.data(), auths.size());
 
   //Sample and send challenge seed
   uint8_t cnc_seed[CSEC_BYTES];
   exec_rnds[exec_id].get<uint8_t>(cnc_seed, CSEC_BYTES);
-  exec_channels[exec_id]->asyncSendCopy(cnc_seed, CSEC_BYTES);
+  exec_channels[exec_id].asyncSendCopy(cnc_seed, CSEC_BYTES);
 
   //Select challenge circuits based on cnc_seed
   osuCrypto::BitVector cnc_check_circuits(exec_num_total_garbled);
@@ -1077,11 +1077,11 @@ void DuploEvaluator::CommitInputAuthAndCutAndChoose(uint32_t exec_id, uint32_t e
   BYTEArrayVector cnc_keys_share(cnc_num_commit_keys, CODEWORD_BYTES);
 
   osuCrypto::BitVector perm_bits(cnc_num_commit_keys);
-  exec_channels[exec_id]->recv(perm_bits);
+  exec_channels[exec_id].recv(perm_bits);
 
   //Receive postulated perm_bit values
   BYTEArrayVector cnc_keys(cnc_num_commit_keys, CSEC_BYTES);
-  exec_channels[exec_id]->recv(cnc_keys.data(), cnc_keys.size());
+  exec_channels[exec_id].recv(cnc_keys.data(), cnc_keys.size());
 
   uint32_t current_check_circuit_idx = 0;
   for (int i = 0; i < exec_num_total_garbled; ++i) {
@@ -1104,7 +1104,7 @@ void DuploEvaluator::CommitInputAuthAndCutAndChoose(uint32_t exec_id, uint32_t e
     }
   }
 
-  if (!commit_receivers[exec_id].BatchDecommit(cnc_keys_share, cnc_keys, exec_rnds[exec_id], *exec_channels[exec_id], true)) {
+  if (!commit_receivers[exec_id].BatchDecommit(cnc_keys_share, cnc_keys, exec_rnds[exec_id], exec_channels[exec_id], true)) {
     std::cout << "Abort, input auths cut-and-choose decommit failed!" << std::endl;
     throw std::runtime_error("Abort, input auths cut-and-choose decommit failed!");
   }
@@ -1237,8 +1237,8 @@ void DuploEvaluator::BucketAllCircuitAuths(uint32_t exec_id, uint32_t auth_size,
   }
 
   BYTEArrayVector solder_keys(total_num_solderings, CSEC_BYTES);
-  exec_channels[exec_id]->recv(solder_keys);
-  if (!commit_receivers[exec_id].BatchDecommit(solder_keys_share, solder_keys, exec_rnds[exec_id], *exec_channels[exec_id], true)) {
+  exec_channels[exec_id].recv(solder_keys.data(), solder_keys.size());
+  if (!commit_receivers[exec_id].BatchDecommit(solder_keys_share, solder_keys, exec_rnds[exec_id], exec_channels[exec_id], true)) {
     std::cout << "Abort, auth soldering decommit failed!" << std::endl;
     throw std::runtime_error("Abort, auth soldering decommit failed!");
   }
@@ -1379,11 +1379,11 @@ void DuploEvaluator::ReceiveAndStoreComponentSolderings(std::string component_ty
   BYTEArrayVector solder_keys_share(solder_num_commit_keys + exec_num_buckets, CODEWORD_BYTES);
 
   osuCrypto::BitVector perm_bits(solder_num_commit_keys);
-  exec_channels[exec_id]->recv(perm_bits);
+  exec_channels[exec_id].recv(perm_bits);
 
   //Receive the postulated solderings and check correctness using batch decommit
   BYTEArrayVector solder_keys(solder_num_commit_keys + exec_num_buckets, CSEC_BYTES);
-  exec_channels[exec_id]->recv(solder_keys);
+  exec_channels[exec_id].recv(solder_keys.data(), solder_keys.size());
 
   BYTEArrayVector recov_shares;
   persistent_storage.ReadBuckets(EVAL_RECOV_PREFIX, RECOV, 0, 1, recov_shares);
@@ -1482,7 +1482,7 @@ void DuploEvaluator::ReceiveAndStoreComponentSolderings(std::string component_ty
     }
   }
 
-  if (!commit_receivers[exec_id].BatchDecommit(solder_keys_share, solder_keys, exec_rnds[exec_id], *exec_channels[exec_id], true)) {
+  if (!commit_receivers[exec_id].BatchDecommit(solder_keys_share, solder_keys, exec_rnds[exec_id], exec_channels[exec_id], true)) {
     std::cout << "Abort, soldering decommit failed!" << std::endl;
     throw std::runtime_error("Abort, soldering decommit failed!");
   }
@@ -1541,11 +1541,11 @@ void DuploEvaluator::ReceiveAndStoreComposedSolderings(uint32_t exec_id, Compose
   BYTEArrayVector solder_keys_share(exec_num_total_solderings, CODEWORD_BYTES);
 
   osuCrypto::BitVector perm_bits(exec_num_total_solderings);
-  exec_channels[exec_id]->recv(perm_bits);
+  exec_channels[exec_id].recv(perm_bits);
 
   //Receive the postulated solderings and check correctness using batch decommit
   BYTEArrayVector solder_keys(exec_num_total_solderings, CSEC_BYTES);
-  exec_channels[exec_id]->recv(solder_keys);
+  exec_channels[exec_id].recv(solder_keys.data(), solder_keys.size());
 
   std::vector<std::pair<uint32_t, bool>> revert_pair;
 
@@ -1632,7 +1632,7 @@ void DuploEvaluator::ReceiveAndStoreComposedSolderings(uint32_t exec_id, Compose
     XORLSB(solder_keys[revert_pair[i].first], revert_pair[i].second);
   }
 
-  if (!commit_receivers[exec_id].BatchDecommit(solder_keys_share, solder_keys, exec_rnds[exec_id], *exec_channels[exec_id], true)) {
+  if (!commit_receivers[exec_id].BatchDecommit(solder_keys_share, solder_keys, exec_rnds[exec_id], exec_channels[exec_id], true)) {
     std::cout << "Abort, vertical soldering decommit failed!" << std::endl;
     throw std::runtime_error("Abort, vertical soldering decommit failed!");
   }
@@ -1647,14 +1647,14 @@ void DuploEvaluator::DecommitInpPermBits(uint32_t exec_id, uint32_t offset, uint
   }
 
   BYTEArrayVector commit_shares_lsb_blind(SSEC, CODEWORD_BYTES);
-  if (!commit_receivers[exec_id].Commit(commit_shares_lsb_blind, exec_rnds[exec_id], *exec_channels[exec_id], std::numeric_limits<uint32_t>::max(), ALL_RND_LSB_ZERO)) {
+  if (!commit_receivers[exec_id].Commit(commit_shares_lsb_blind, exec_rnds[exec_id], exec_channels[exec_id], std::numeric_limits<uint32_t>::max(), ALL_RND_LSB_ZERO)) {
     std::cout << "Abort, inp blind commit failed!" << std::endl;
     throw std::runtime_error("Abort, inp blind commit failed!");
   }
 
   //Receive the postulated input eval decommit bits
   osuCrypto::BitVector decommit_lsb(exec_num_inputs);
-  exec_channels[exec_id]->recv(decommit_lsb);
+  exec_channels[exec_id].recv(decommit_lsb);
 
   BYTEArrayVector decommit_lsb_share(exec_num_inputs, CODEWORD_BYTES);
 
@@ -1672,7 +1672,7 @@ void DuploEvaluator::DecommitInpPermBits(uint32_t exec_id, uint32_t offset, uint
     decommit_lsb_bytes[curr_local_idx] = decommit_lsb[curr_local_idx];
   }
 
-  if (!commit_receivers[exec_id].BatchDecommitLSB(decommit_lsb_share, decommit_lsb, commit_shares_lsb_blind, exec_rnds[exec_id], *exec_channels[exec_id])) {
+  if (!commit_receivers[exec_id].BatchDecommitLSB(decommit_lsb_share, decommit_lsb, commit_shares_lsb_blind, exec_rnds[exec_id], exec_channels[exec_id])) {
     std::cout << "Abort, inp blind lsb decommit failed!" << std::endl;
     throw std::runtime_error("Abort, inp blind lsb decommit failed!");
   }
@@ -1702,7 +1702,7 @@ void DuploEvaluator::PreprocessEvalInputOTs(uint32_t exec_id, uint32_t eval_inpu
   osuCrypto::BitVector input_masks_choices(num_ots);
   input_masks_choices.randomize(exec_rnds[exec_id]);
 
-  dot_receivers[exec_id]->receive(input_masks_choices, msgs, exec_rnds[exec_id], *exec_channels[exec_id]);
+  dot_receivers[exec_id]->receive(input_masks_choices, msgs, exec_rnds[exec_id], exec_channels[exec_id]);
 
   for (int i = 0; i < num_ots; ++i) {
     _mm_storeu_si128((__m128i*) input_masks[i], msgs[i]);
@@ -1714,14 +1714,14 @@ void DuploEvaluator::PreprocessEvalInputOTs(uint32_t exec_id, uint32_t eval_inpu
   uint32_t num_commits = num_ots + 1;
   BYTEArrayVector commit_keys_share(num_commits, CODEWORD_BYTES);
 
-  if (!commit_receivers[exec_id].Commit(commit_keys_share, exec_rnds[exec_id], *exec_channels[exec_id])) {
+  if (!commit_receivers[exec_id].Commit(commit_keys_share, exec_rnds[exec_id], exec_channels[exec_id])) {
     std::cout << "Abort, PreprocessEvalInputOTs random commit failed!" << std::endl;
     throw std::runtime_error("Abort, PreprocessEvalInputOTs random commit failed!");
   }
 
   //Run chosen commit
   BYTEArrayVector input_mask_corrections(num_commits, CSEC_BYTES);
-  exec_channels[exec_id]->recv(input_mask_corrections.data(), input_mask_corrections.size());
+  exec_channels[exec_id].recv(input_mask_corrections.data(), input_mask_corrections.size());
 
 
   //////////////////////////////////////CNC////////////////////////////////////
@@ -1736,8 +1736,8 @@ void DuploEvaluator::PreprocessEvalInputOTs(uint32_t exec_id, uint32_t eval_inpu
       ot_delta_cnc_choices[i] = input_masks_choices[exec_num_eval_inputs + i];
     }
 
-    exec_channels[exec_id]->send(cnc_ot_values);
-    exec_channels[exec_id]->send(ot_delta_cnc_choices);
+    exec_channels[exec_id].send(cnc_ot_values.data(), cnc_ot_values.size());
+    exec_channels[exec_id].send(ot_delta_cnc_choices.data(), ot_delta_cnc_choices.sizeBytes());
 
     //Compute decommit shares
     BYTEArrayVector chosen_decommit_shares(SSEC, CODEWORD_BYTES);
@@ -1751,7 +1751,7 @@ void DuploEvaluator::PreprocessEvalInputOTs(uint32_t exec_id, uint32_t eval_inpu
 
     //Receive decommits
     BYTEArrayVector decomitted_values(SSEC, CSEC_BYTES);
-    if (!commit_receivers[exec_id].Decommit(chosen_decommit_shares, decomitted_values, *exec_channels[exec_id])) {
+    if (!commit_receivers[exec_id].Decommit(chosen_decommit_shares, decomitted_values, exec_channels[exec_id])) {
       std::cout << "Sender decommit fail in OT CNC!" << std::endl;
       throw std::runtime_error("Sender decommit fail in OT CNC!");
     }
@@ -1806,7 +1806,7 @@ void DuploEvaluator::PreprocessBlindOutPermBits(uint32_t exec_id, uint32_t eval_
   }
 
   BYTEArrayVector commit_shares_lsb_blind(exec_num_outputs, CODEWORD_BYTES);
-  if (!commit_receivers[exec_id].Commit(commit_shares_lsb_blind, exec_rnds[exec_id], *exec_channels[exec_id], std::numeric_limits<uint32_t>::max(), ALL_RND_LSB_ZERO)) {
+  if (!commit_receivers[exec_id].Commit(commit_shares_lsb_blind, exec_rnds[exec_id], exec_channels[exec_id], std::numeric_limits<uint32_t>::max(), ALL_RND_LSB_ZERO)) {
     std::cout << "Abort, out blind commit failed!" << std::endl;
     throw std::runtime_error("Abort, out blind commit failed!");
   }
@@ -1892,18 +1892,18 @@ void DuploEvaluator::GetInputs(uint32_t exec_id, ComposedCircuit & composed_circ
   }
 
   if (exec_num_eval_inputs != 0) {
-    SafeAsyncSend(*exec_channels[exec_id], e);
+    exec_channels[exec_id].send(e.data(), e.sizeBytes());
   }
 
   BYTEArrayVector const_keys(exec_num_const_inputs, CSEC_BYTES);
   if (exec_num_const_inputs != 0) {
-    exec_channels[exec_id]->recv(const_keys.data(), const_keys.size());
+    exec_channels[exec_id].recv(const_keys.data(), const_keys.size());
   }
 
   BYTEArrayVector decomitted_inp_values(2 * exec_num_eval_inputs, CSEC_BYTES);
   if (exec_num_eval_inputs != 0) {
     //Check the decommits
-    if (!commit_receivers[exec_id].Decommit(eval_key_shares, decomitted_inp_values, *exec_channels[exec_id])) {
+    if (!commit_receivers[exec_id].Decommit(eval_key_shares, decomitted_inp_values, exec_channels[exec_id])) {
       std::cout << "Sender fail inp decommit in inp delivery!" << std::endl;
       throw std::runtime_error("Abort, Sender fail inp decommit in inp delivery!");
     }
@@ -2163,11 +2163,11 @@ bool DuploEvaluator::DecommitOutPermBits(uint32_t exec_id, std::vector<std::pair
 
   BYTEArrayVector committed_values(num_eval_total_outputs, CSEC_BYTES);
   if (non_interactive) {
-    if (!commit_receivers[exec_id].Decommit(decommit_lsb_share, committed_values, *exec_channels[exec_id])) {
+    if (!commit_receivers[exec_id].Decommit(decommit_lsb_share, committed_values, exec_channels[exec_id])) {
       return false;
     }
   } else {
-    if (!commit_receivers[exec_id].BatchDecommit(decommit_lsb_share, committed_values, exec_rnds[exec_id], *exec_channels[exec_id])) {
+    if (!commit_receivers[exec_id].BatchDecommit(decommit_lsb_share, committed_values, exec_rnds[exec_id], exec_channels[exec_id])) {
       return false;
     }
   }

@@ -9,10 +9,10 @@ DuploConstructor::DuploConstructor(uint8_t seed[], uint32_t num_max_parallel_exe
 
 DuploConstructor::~DuploConstructor() {
 
-  chan->close();
+  chan.close();
 
   for (int e = 0; e < exec_channels.size(); ++e) {
-    exec_channels[e]->close();
+    exec_channels[e].close();
   }
 
   end_point.stop();
@@ -20,12 +20,12 @@ DuploConstructor::~DuploConstructor() {
 
 void DuploConstructor::Connect(std::string ip_address, uint16_t port) {
 
-  end_point.start(ios, ip_address, port, true, "ep");
+  end_point.start(ios, ip_address, port, osuCrypto::EpMode::Server, "ep");
 
-  chan = &end_point.addChannel("chan", "chan");
+  chan = end_point.addChannel("chan", "chan");
 
   for (int e = 0; e < commit_senders.size(); ++e) {
-    exec_channels.emplace_back(&end_point.addChannel("exec_channel_" + std::to_string(e), "exec_channel_" + std::to_string(e)));
+    exec_channels.emplace_back(end_point.addChannel("exec_channel_" + std::to_string(e), "exec_channel_" + std::to_string(e)));
   }
 }
 
@@ -38,7 +38,7 @@ void DuploConstructor::Setup() {
   base_ot_choices.randomize(rnd);
 
   osuCrypto::NaorPinkas baseOTs;
-  baseOTs.receive(base_ot_choices, base_ots, rnd, *chan, 1);
+  baseOTs.receive(base_ot_choices, base_ots, rnd, chan, 1);
 
   //Extended the base ots and set them for each dot_sender
   osuCrypto::KosDotExtSender temp_dot_sender;
@@ -59,7 +59,7 @@ void DuploConstructor::Setup() {
   kos_sender.setBaseOts(currBaseSendOts, kos_ot_choices);
 
   //Run kos OTX and store the resulting NUM_COMMIT_SEED_OT OTs appropriately
-  kos_sender.send(commit_seed_OTs, rnd, *chan);
+  kos_sender.send(commit_seed_OTs, rnd, chan);
 
   SplitCommitSender string_tmp_sender;
   string_tmp_sender.SetMsgBitSize(CSEC, gen_matrix_path);
@@ -79,7 +79,7 @@ void DuploConstructor::Setup() {
     BYTEArrayVector(1, CODEWORD_BYTES)
   };
 
-  string_tmp_sender.Commit(recov_share, *chan);
+  string_tmp_sender.Commit(recov_share, chan);
 
   persistent_storage.PrepareFile(CONST_RECOV_PREFIX, RECOV, 2 * recov_share[0].size());
 
@@ -172,7 +172,7 @@ void DuploConstructor::PreprocessComponentType(std::string component_type, Circu
   persistent_storage.PrepareFile(component_type, AUXDATA, auxdata_bytes);
 
   uint8_t bucket_seed[CSEC_BYTES];
-  chan->recv(bucket_seed, CSEC_BYTES);
+  chan.recv(bucket_seed, CSEC_BYTES);
 
   std::vector<uint32_t> permuted_eval_ids(num_eval_circuits);
   std::vector<uint32_t> permuted_eval_ids_inv(num_eval_circuits);
@@ -316,7 +316,7 @@ void DuploConstructor::DecodeKeys(ComposedCircuit& composed_circuit, std::vector
       uint32_t exec_num_const_output_wires = GetNumberOfOutputWires(const_outputs, out_components_from[exec_id], out_components_to[exec_id]);
 
       BYTEArrayVector exec_const_output_keys(exec_num_const_output_wires, CSEC_BYTES);
-      exec_channels[exec_id]->recv(exec_const_output_keys.data(), exec_const_output_keys.size());
+      exec_channels[exec_id].recv(exec_const_output_keys.data(), exec_const_output_keys.size());
 
       uint32_t exec_num_components = out_components_to[exec_id] - out_components_from[exec_id];
 
@@ -363,7 +363,7 @@ void DuploConstructor::CommitGarbleAndCutAndChoose(uint32_t exec_id, Circuit& ci
   };
 
   //Commit to the input/output wires and Deltas of all garbled circuits.
-  commit_senders[exec_id].Commit(commit_keys_share, *exec_channels[exec_id], deltas_idx);
+  commit_senders[exec_id].Commit(commit_keys_share, exec_channels[exec_id], deltas_idx);
 
   //Buffers
   BYTEArrayVector garbling_inp_keys(circuit.num_inp_wires, CSEC_BYTES);
@@ -413,14 +413,14 @@ void DuploConstructor::CommitGarbleAndCutAndChoose(uint32_t exec_id, Circuit& ci
   }
 
   //Send output keys commit corrections and hashes of tables. Thereby "commits" constructor to the tables
-  SafeAsyncSend(*exec_channels[exec_id], out_wire_commit_corrections);
-  SafeAsyncSend(*exec_channels[exec_id], garb_circuit_hashes);
+  exec_channels[exec_id].send(out_wire_commit_corrections.data(), out_wire_commit_corrections.size());
+  exec_channels[exec_id].send(garb_circuit_hashes.data(), garb_circuit_hashes.size());
 
   ///////////////////////// CUT-AND-CHOOSE /////////////////////////
 
   //Receive challenge seed
   uint8_t cnc_seed[CSEC_BYTES];
-  exec_channels[exec_id]->recv(cnc_seed, CSEC_BYTES);
+  exec_channels[exec_id].recv(cnc_seed, CSEC_BYTES);
 
   //Select challenge circuits based on cnc_seed
   osuCrypto::BitVector cnc_check_circuits(exec_num_total_garbled);
@@ -528,11 +528,11 @@ void DuploConstructor::CommitGarbleAndCutAndChoose(uint32_t exec_id, Circuit& ci
     std::cout << "Problem. Not enough eval circuits! Params should be set so this never occurs" << std::endl;
   }
 
-  exec_channels[exec_id]->send(perm_bits);
+  exec_channels[exec_id].send(perm_bits);
 
   //BatchDecommit the cut-and-choose input and output keys. Needs to be done after BatchDecommit of perm bit values.
-  SafeAsyncSend(*exec_channels[exec_id], cnc_keys);
-  commit_senders[exec_id].BatchDecommit(cnc_keys_share, *exec_channels[exec_id], true);
+  exec_channels[exec_id].send(cnc_keys.data(), cnc_keys.size());
+  commit_senders[exec_id].BatchDecommit(cnc_keys_share, exec_channels[exec_id], true);
 }
 
 void DuploConstructor::BucketAndSendEvalCircuits(std::string component_type, uint32_t exec_id, Circuit& circuit, uint32_t bucket_size, std::vector<uint32_t>& permuted_eval_ids_inv, uint32_t exec_buckets_from, uint32_t exec_buckets_to, std::vector<ConstGarbledCircuit>& aux_garbled_circuits_data) {
@@ -577,7 +577,7 @@ void DuploConstructor::BucketAndSendEvalCircuits(std::string component_type, uin
     std::copy(garbled_circuit.GetTables(), garbled_circuit.GetTables() + garbled_circuit.size, garbled_tables[i]);
   }
 
-  SafeAsyncSend(*exec_channels[exec_id], garbled_tables);
+  exec_channels[exec_id].send(garbled_tables.data(), garbled_tables.size());
   //garbled_tables could be deleted at this point to save space!
 
   ComputeAndSendComponentSolderings(component_type, exec_id, circuit, bucket_size, exec_permuted_aux_info, exec_buckets_from, exec_buckets_to);
@@ -674,7 +674,7 @@ void DuploConstructor::PrepareOutputWireAuthenticators(uint32_t num_parallel_exe
   }
 
   uint8_t bucket_seed[CSEC_BYTES];
-  chan->recv(bucket_seed, CSEC_BYTES);
+  chan.recv(bucket_seed, CSEC_BYTES);
   osuCrypto::PRNG bucket_rnd;
   bucket_rnd.SetSeed(load_block(bucket_seed));
 
@@ -779,7 +779,7 @@ void DuploConstructor::PrepareInputWireAuthenticators(uint64_t num_input_auth_bu
 #endif
 
   uint8_t bucket_seed[CSEC_BYTES];
-  chan->recv(bucket_seed, CSEC_BYTES);
+  chan.recv(bucket_seed, CSEC_BYTES);
   osuCrypto::PRNG bucket_rnd;
   bucket_rnd.SetSeed(load_block(bucket_seed));
 
@@ -838,7 +838,7 @@ void DuploConstructor::CommitCircuitAuthAndCutAndChoose(uint32_t exec_id, uint32
   };
 
   //Commit to the input/output wires and Deltas of all garbled circuits.
-  commit_senders[exec_id].Commit(commit_keys_share, *exec_channels[exec_id], exec_num_auths);
+  commit_senders[exec_id].Commit(commit_keys_share, exec_channels[exec_id], exec_num_auths);
 
   //If not execution 0, wait until execution 0 has put the delta commitment into aux_auth_delta_data
   std::condition_variable& delta_updated_cond_val = std::get<1>(delta_signal);
@@ -883,13 +883,13 @@ void DuploConstructor::CommitCircuitAuthAndCutAndChoose(uint32_t exec_id, uint32
   }
 
   //Send wire authenticators
-  SafeAsyncSend(*exec_channels[exec_id], auths);
+  exec_channels[exec_id].send(auths.data(), auths.size());
 
   ///////////////////////// CUT-AND-CHOOSE /////////////////////////
 
   //Receive challenge seed
   uint8_t cnc_seed[CSEC_BYTES];
-  exec_channels[exec_id]->recv(cnc_seed, CSEC_BYTES);
+  exec_channels[exec_id].recv(cnc_seed, CSEC_BYTES);
 
   //Select challenge auths based on cnc_seed
   osuCrypto::BitVector cnc_check_auths(exec_num_auths);
@@ -944,8 +944,8 @@ void DuploConstructor::CommitCircuitAuthAndCutAndChoose(uint32_t exec_id, uint32
   }
 
   //BatchDecommit the cut-and-choose input and output keys.
-  SafeAsyncSend(*exec_channels[exec_id], cnc_keys);
-  commit_senders[exec_id].BatchDecommit(cnc_keys_share, *exec_channels[exec_id], true);
+  exec_channels[exec_id].send(cnc_keys.data(), cnc_keys.size());
+  commit_senders[exec_id].BatchDecommit(cnc_keys_share, exec_channels[exec_id], true);
 }
 
 void DuploConstructor::CommitInputAuthAndCutAndChoose(uint32_t exec_id, uint32_t exec_num_total_garbled, uint32_t check_factor, bool negate_check_factor, uint32_t exec_eval_circuits_from, uint32_t exec_eval_circuits_to, std::vector<ConstGarbledCircuit>& input_aux_auth_data) {
@@ -959,7 +959,7 @@ void DuploConstructor::CommitInputAuthAndCutAndChoose(uint32_t exec_id, uint32_t
   };
 
   //Commit to the input/output wires and Deltas of all garbled circuits.
-  commit_senders[exec_id].Commit(commit_keys_share, *exec_channels[exec_id], deltas_idx);
+  commit_senders[exec_id].Commit(commit_keys_share, exec_channels[exec_id], deltas_idx);
 
   //Buffers
   uint8_t delta[CSEC_BYTES];
@@ -996,16 +996,16 @@ void DuploConstructor::CommitInputAuthAndCutAndChoose(uint32_t exec_id, uint32_t
   }
 
   //Send output keys commit corrections and hashes of tables. Thereby "commits" constructor to the tables
-  SafeAsyncSend(*exec_channels[exec_id], inp_wire_commit_corrections);
+  exec_channels[exec_id].send(inp_wire_commit_corrections.data(), inp_wire_commit_corrections.size());
 
   //Send wire authenticators
-  SafeAsyncSend(*exec_channels[exec_id], auths);
+  exec_channels[exec_id].send(auths.data(), auths.size());
 
   ///////////////////////// CUT-AND-CHOOSE /////////////////////////
 
   //Receive challenge seed
   uint8_t cnc_seed[CSEC_BYTES];
-  exec_channels[exec_id]->recv(cnc_seed, CSEC_BYTES);
+  exec_channels[exec_id].recv(cnc_seed, CSEC_BYTES);
 
   //Select challenge circuits based on cnc_seed
   osuCrypto::BitVector cnc_check_circuits(exec_num_total_garbled);
@@ -1089,11 +1089,11 @@ void DuploConstructor::CommitInputAuthAndCutAndChoose(uint32_t exec_id, uint32_t
     std::cout << "Problem. Not enough eval auths! Params should be set so this never occurs" << std::endl;
   }
 
-  exec_channels[exec_id]->send(perm_bits);
+  exec_channels[exec_id].send(perm_bits);
 
   //BatchDecommit the cut-and-choose input and output keys. Needs to be done after BatchDecommit of perm bit values.
-  SafeAsyncSend(*exec_channels[exec_id], cnc_keys);
-  commit_senders[exec_id].BatchDecommit(cnc_keys_share, *exec_channels[exec_id], true);
+  exec_channels[exec_id].send(cnc_keys.data(), cnc_keys.size());
+  commit_senders[exec_id].BatchDecommit(cnc_keys_share, exec_channels[exec_id], true);
 }
 
 void DuploConstructor::BucketAllCircuitAuths(uint32_t exec_id, uint32_t auth_size, std::vector<uint32_t>& permuted_eval_ids_inv, std::vector<int>& session_circuit_buckets_from, std::vector<int>& session_circuit_buckets_to, std::vector<BYTEArrayVector>& aux_auth_data, BYTEArrayVector & aux_auth_delta_data) {
@@ -1179,8 +1179,8 @@ void DuploConstructor::BucketAllCircuitAuths(uint32_t exec_id, uint32_t auth_siz
   }
 
   //Send postulated solderings and prove correct using BatchDecommit
-  SafeAsyncSend(*exec_channels[exec_id], solder_keys);
-  commit_senders[exec_id].BatchDecommit(solder_keys_share, *exec_channels[exec_id], true);
+  exec_channels[exec_id].send(solder_keys.data(), solder_keys.size());
+  commit_senders[exec_id].BatchDecommit(solder_keys_share, exec_channels[exec_id], true);
 
 }
 
@@ -1339,11 +1339,11 @@ void DuploConstructor::ComputeAndSendComponentSolderings(std::string component_t
     }
   }
 
-  exec_channels[exec_id]->send(perm_bits);
+  exec_channels[exec_id].send(perm_bits);
 
   //Send postulated solderings and prove correct using BatchDecommit
-  SafeAsyncSend(*exec_channels[exec_id], solder_keys);
-  commit_senders[exec_id].BatchDecommit(solder_keys_share, *exec_channels[exec_id], true);
+  exec_channels[exec_id].send(solder_keys.data(), solder_keys.size());
+  commit_senders[exec_id].BatchDecommit(solder_keys_share, exec_channels[exec_id], true);
 
   //////////////////////////////Write to Disc/////////////////////////////////
 
@@ -1499,12 +1499,12 @@ void DuploConstructor::ComputeAndSendComposedSolderings(uint32_t exec_id, Compos
     }
   }
 
-  exec_channels[exec_id]->send(perm_bits);
+  exec_channels[exec_id].send(perm_bits);
 
   //Send postulated solderings and prove correct using BatchDecommit
-  SafeAsyncSend(*exec_channels[exec_id], solder_keys);
+  exec_channels[exec_id].send(solder_keys.data(), solder_keys.size());
 
-  commit_senders[exec_id].BatchDecommit(solder_keys_share, *exec_channels[exec_id], true);
+  commit_senders[exec_id].BatchDecommit(solder_keys_share, exec_channels[exec_id], true);
 }
 
 void DuploConstructor::DecommitInpPermBits(uint32_t exec_id, uint32_t offset, uint32_t eval_inputs_from, uint32_t eval_inputs_to) {
@@ -1519,7 +1519,7 @@ void DuploConstructor::DecommitInpPermBits(uint32_t exec_id, uint32_t offset, ui
     BYTEArrayVector(SSEC, CODEWORD_BYTES),
     BYTEArrayVector(SSEC, CODEWORD_BYTES)
   };
-  commit_senders[exec_id].Commit(commit_shares_lsb_blind, *exec_channels[exec_id], std::numeric_limits<uint32_t>::max(), ALL_RND_LSB_ZERO);
+  commit_senders[exec_id].Commit(commit_shares_lsb_blind, exec_channels[exec_id], std::numeric_limits<uint32_t>::max(), ALL_RND_LSB_ZERO);
 
   std::array<BYTEArrayVector, 2> decommit_lsb_share = {
     BYTEArrayVector(exec_num_inputs, CODEWORD_BYTES),
@@ -1545,8 +1545,8 @@ void DuploConstructor::DecommitInpPermBits(uint32_t exec_id, uint32_t offset, ui
   }
 
   //Send postulated perm bit values and prove correct using BatchDecommit
-  exec_channels[exec_id]->send(decommit_lsb);
-  commit_senders[exec_id].BatchDecommitLSB(decommit_lsb_share, commit_shares_lsb_blind, *exec_channels[exec_id]);
+  exec_channels[exec_id].send(decommit_lsb);
+  commit_senders[exec_id].BatchDecommitLSB(decommit_lsb_share, commit_shares_lsb_blind, exec_channels[exec_id]);
 }
 
 void DuploConstructor::PreprocessEvalInputOTs(uint32_t exec_id, uint32_t eval_inputs_from, uint32_t eval_inputs_to) {
@@ -1569,7 +1569,7 @@ void DuploConstructor::PreprocessEvalInputOTs(uint32_t exec_id, uint32_t eval_in
   BYTEArrayVector input_masks(num_ots, CSEC_BYTES);
   std::vector<std::array<osuCrypto::block, 2>> msgs(num_ots);
 
-  dot_senders[exec_id]->send(msgs, exec_rnds[exec_id], *exec_channels[exec_id]);
+  dot_senders[exec_id]->send(msgs, exec_rnds[exec_id], exec_channels[exec_id]);
 
   osuCrypto::block block_delta = msgs[0][0] ^ msgs[0][1];
   _mm_storeu_si128((__m128i*) delta, block_delta);
@@ -1586,7 +1586,7 @@ void DuploConstructor::PreprocessEvalInputOTs(uint32_t exec_id, uint32_t eval_in
     BYTEArrayVector(num_commits, CODEWORD_BYTES)
   };
 
-  commit_senders[exec_id].Commit(commit_keys_share, *exec_channels[exec_id]);
+  commit_senders[exec_id].Commit(commit_keys_share, exec_channels[exec_id]);
 
   //Run chosen commit
   BYTEArrayVector input_mask_corrections(num_commits, CSEC_BYTES);
@@ -1597,7 +1597,7 @@ void DuploConstructor::PreprocessEvalInputOTs(uint32_t exec_id, uint32_t eval_in
   XOR_128(input_mask_corrections[num_ots], commit_keys_share[0][num_ots], commit_keys_share[1][num_ots]);
   XOR_128(input_mask_corrections[num_ots], delta);
 
-  SafeAsyncSend(*exec_channels[exec_id], input_mask_corrections);
+  exec_channels[exec_id].send(input_mask_corrections.data(), input_mask_corrections.size());
 
   //////////////////////////////////////CNC////////////////////////////////////
   if (exec_id == 0) {
@@ -1605,8 +1605,8 @@ void DuploConstructor::PreprocessEvalInputOTs(uint32_t exec_id, uint32_t eval_in
     //Receive values from receiver and check that they are valid OTs. In the same loop we also build the decommit information.
     BYTEArrayVector cnc_ot_values(SSEC, CSEC_BYTES);
     osuCrypto::BitVector ot_delta_cnc_choices(SSEC);
-    exec_channels[exec_id]->recv(cnc_ot_values);
-    exec_channels[exec_id]->recv(ot_delta_cnc_choices);
+    exec_channels[exec_id].recv(cnc_ot_values.data(), cnc_ot_values.size());
+    exec_channels[exec_id].recv(ot_delta_cnc_choices.data(), ot_delta_cnc_choices.sizeBytes());
 
     uint8_t correct_ot_value[CSEC_BYTES];
     std::array<BYTEArrayVector, 2> chosen_decommit_shares = {
@@ -1633,7 +1633,7 @@ void DuploConstructor::PreprocessEvalInputOTs(uint32_t exec_id, uint32_t eval_in
     }
 
     //As receiver sent correct input masks, we now decommit to the same values. Will prove that sender indeed comitted to Delta
-    commit_senders[exec_id].Decommit(chosen_decommit_shares, *exec_channels[exec_id]);
+    commit_senders[exec_id].Decommit(chosen_decommit_shares, exec_channels[exec_id]);
   }
 
   //Update global input wire counter
@@ -1668,7 +1668,7 @@ void DuploConstructor::PreprocessBlindOutPermBits(uint32_t exec_id, uint32_t eva
     BYTEArrayVector(exec_num_outputs, CODEWORD_BYTES),
     BYTEArrayVector(exec_num_outputs, CODEWORD_BYTES)
   };
-  commit_senders[exec_id].Commit(commit_shares_lsb_blind, *exec_channels[exec_id], std::numeric_limits<uint32_t>::max(), ALL_RND_LSB_ZERO);
+  commit_senders[exec_id].Commit(commit_shares_lsb_blind, exec_channels[exec_id], std::numeric_limits<uint32_t>::max(), ALL_RND_LSB_ZERO);
 
   //Write data to disc
   BYTEArrayVector shares(exec_num_outputs, 2 * CODEWORD_BYTES);
@@ -1701,7 +1701,7 @@ void DuploConstructor::GetInputs(uint32_t exec_id, ComposedCircuit& composed_cir
   uint32_t eval_delta_offset = exec_num_eval_inputs;
 
   if (exec_num_eval_inputs != 0) {
-    exec_channels[exec_id]->recv(e);
+    exec_channels[exec_id].recv(e);
   }
 
   //Convert from bits to bytes
@@ -1778,11 +1778,11 @@ void DuploConstructor::GetInputs(uint32_t exec_id, ComposedCircuit& composed_cir
   }
 
   if (exec_num_const_inputs != 0) {
-    SafeAsyncSend(*exec_channels[exec_id], const_keys);
+    exec_channels[exec_id].send(const_keys.data(), const_keys.size());
   }
 
   if (exec_num_eval_inputs != 0) {
-    commit_senders[exec_id].Decommit(eval_decommits, *exec_channels[exec_id]);
+    commit_senders[exec_id].Decommit(eval_decommits, exec_channels[exec_id]);
   }
 }
 
@@ -1840,8 +1840,8 @@ void DuploConstructor::DecommitOutPermBits(uint32_t exec_id, std::vector<std::pa
   }
 
   if (non_interactive) {
-    commit_senders[exec_id].Decommit(decommit_lsb_share, *exec_channels[exec_id]);  
+    commit_senders[exec_id].Decommit(decommit_lsb_share, exec_channels[exec_id]);  
   } else {
-    commit_senders[exec_id].BatchDecommit(decommit_lsb_share, *exec_channels[exec_id]);
+    commit_senders[exec_id].BatchDecommit(decommit_lsb_share, exec_channels[exec_id]);
   }
 }

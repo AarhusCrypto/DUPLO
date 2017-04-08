@@ -214,8 +214,8 @@ int main(int argc, const char* argv[]) {
   auto preprocess_end = GET_TIME();
 
   //Sync with Constructor
-  duplo_eval.chan->send(&snd, 1);
-  duplo_eval.chan->recv(&rcv, 1);
+  duplo_eval.chan.send(&snd, 1);
+  duplo_eval.chan.recv(&rcv, 1);
 
   uint64_t preprocess_data_sent = duplo_eval.GetTotalDataSent() - setup_data_sent;
 
@@ -224,8 +224,8 @@ int main(int argc, const char* argv[]) {
   auto prepare_eval_end = GET_TIME();
 
   //Sync with Constructor
-  duplo_eval.chan->send(&snd, 1);
-  duplo_eval.chan->recv(&rcv, 1);
+  duplo_eval.chan.send(&snd, 1);
+  duplo_eval.chan.recv(&rcv, 1);
 
   uint64_t prepare_data_sent = duplo_eval.GetTotalDataSent() - setup_data_sent - preprocess_data_sent;
 
@@ -234,8 +234,8 @@ int main(int argc, const char* argv[]) {
   auto build_end = GET_TIME();
 
   //Sync with Constructor
-  duplo_eval.chan->send(&snd, 1);
-  duplo_eval.chan->recv(&rcv, 1);
+  duplo_eval.chan.send(&snd, 1);
+  duplo_eval.chan.recv(&rcv, 1);
 
   uint64_t build_data_sent = duplo_eval.GetTotalDataSent() - setup_data_sent - preprocess_data_sent - prepare_data_sent;
 
@@ -247,8 +247,8 @@ int main(int argc, const char* argv[]) {
   auto eval_circuits_end = GET_TIME();
 
   //Sync with Constructor
-  duplo_eval.chan->send(&snd, 1);
-  duplo_eval.chan->recv(&rcv, 1);
+  duplo_eval.chan.send(&snd, 1);
+  duplo_eval.chan.recv(&rcv, 1);
 
   uint64_t eval_data_sent = duplo_eval.GetTotalDataSent() - setup_data_sent - preprocess_data_sent - prepare_data_sent - build_data_sent;
 
@@ -261,8 +261,8 @@ int main(int argc, const char* argv[]) {
   auto decode_keys_end = GET_TIME();
 
   //Sync with Constructor
-  duplo_eval.chan->send(&snd, 1);
-  duplo_eval.chan->recv(&rcv, 1);
+  duplo_eval.chan.send(&snd, 1);
+  duplo_eval.chan.recv(&rcv, 1);
 
   uint64_t decode_data_sent = duplo_eval.GetTotalDataSent() - setup_data_sent - preprocess_data_sent - prepare_data_sent - build_data_sent - eval_data_sent;
 
