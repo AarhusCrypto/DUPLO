@@ -64,7 +64,7 @@ void DuploEvaluator::Setup() {
 
   //Setup tmp commit_receiver
   SplitCommitReceiver string_tmp_receiver;
-  string_tmp_receiver.SetMsgBitSize(CSEC, gen_matrix_path);
+  string_tmp_receiver.SetMsgBitSize(CSEC);
 
   std::vector<osuCrypto::block> string_msgs(CODEWORD_BITS);
   osuCrypto::BitVector string_choices(CODEWORD_BITS);
