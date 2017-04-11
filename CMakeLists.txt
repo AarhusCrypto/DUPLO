@@ -42,6 +42,7 @@ add_subdirectory(frigate)
 #Include headers
 include_directories(${CMAKE_CURRENT_LIST_DIR}/libs/SplitCommit/libs/libOTe)
 include_directories(${CMAKE_CURRENT_LIST_DIR}/libs/SplitCommit/libs/libOTe/cryptoTools)
+include_directories(${CMAKE_CURRENT_LIST_DIR}/libs/SplitCommit/libs/libOTe/cryptoTools/thirdparty/linux/boost)
 include_directories(${CMAKE_CURRENT_LIST_DIR}/libs/SplitCommit/src/)
 include_directories(${CMAKE_CURRENT_LIST_DIR}/libs/SplitCommit/libs/)
 
