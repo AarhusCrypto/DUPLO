@@ -2,8 +2,7 @@
 
 DuploConstructor::DuploConstructor(uint8_t seed[], uint32_t num_max_parallel_execs, bool ram_only) :
   Duplo(seed, num_max_parallel_execs, ram_only),
-  commit_seed_OTs(NUM_COMMIT_SEED_OT),
-  commit_senders(num_max_parallel_execs) {
+  commit_seed_OTs(NUM_COMMIT_SEED_OT) {
 
 }
 
@@ -24,7 +23,7 @@ void DuploConstructor::Connect(std::string ip_address, uint16_t port) {
 
   chan = end_point.addChannel("chan", "chan");
 
-  for (int e = 0; e < commit_senders.size(); ++e) {
+  for (int e = 0; e < exec_rnds.size(); ++e) {
     exec_channels.emplace_back(end_point.addChannel("exec_channel_" + std::to_string(e), "exec_channel_" + std::to_string(e)));
   }
 }
@@ -44,7 +43,7 @@ void DuploConstructor::Setup() {
   osuCrypto::KosDotExtSender temp_dot_sender;
   temp_dot_sender.setBaseOts(base_ots, base_ot_choices);
 
-  for (int exec_id = 0; exec_id < commit_senders.size(); ++exec_id) {
+  for (int exec_id = 0; exec_id < exec_rnds.size(); ++exec_id) {
     dot_senders.emplace_back(temp_dot_sender.split());
   }
 
@@ -61,8 +60,7 @@ void DuploConstructor::Setup() {
   //Run kos OTX and store the resulting NUM_COMMIT_SEED_OT OTs appropriately
   kos_sender.send(commit_seed_OTs, rnd, chan);
 
-  SplitCommitSender string_tmp_sender;
-  string_tmp_sender.SetMsgBitSize(CSEC);
+  SplitCommitSender string_tmp_sender(CSEC);
 
   std::vector<std::array<osuCrypto::block, 2>> string_msgs(CODEWORD_BITS);
 
@@ -70,9 +68,9 @@ void DuploConstructor::Setup() {
     string_msgs[i][0] = commit_seed_OTs[i][0];
     string_msgs[i][1] = commit_seed_OTs[i][1];
   }
-
+  
   string_tmp_sender.SetSeedOTs(string_msgs);
-  string_tmp_sender.GetCloneSenders(commit_senders.size(), commit_senders);
+  commit_senders = string_tmp_sender.GetCloneSenders(exec_rnds.size());
 
   std::array<BYTEArrayVector, 2> recov_share = {
     BYTEArrayVector(1, CODEWORD_BYTES),

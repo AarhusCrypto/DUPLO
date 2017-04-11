@@ -3,8 +3,7 @@
 DuploEvaluator::DuploEvaluator(uint8_t seed[], uint32_t num_max_parallel_execs, bool ram_only) :
   Duplo(seed, num_max_parallel_execs, ram_only),
   commit_seed_OTs(NUM_COMMIT_SEED_OT),
-  commit_seed_choices(NUM_COMMIT_SEED_OT),
-  commit_receivers(num_max_parallel_execs) {
+  commit_seed_choices(NUM_COMMIT_SEED_OT) {
 
 }
 
@@ -25,7 +24,7 @@ void DuploEvaluator::Connect(std::string ip_address, uint16_t port) {
 
   chan = end_point.addChannel("chan", "chan");
 
-  for (int e = 0; e < commit_receivers.size(); ++e) {
+  for (int e = 0; e < exec_rnds.size(); ++e) {
     exec_channels.emplace_back(end_point.addChannel("exec_channel_" + std::to_string(e), "exec_channel_" + std::to_string(e)));
   }
 }
@@ -44,7 +43,7 @@ void DuploEvaluator::Setup() {
   osuCrypto::KosDotExtReceiver temp_dot_reciever;
   temp_dot_reciever.setBaseOts(base_ots);
 
-  for (int exec_id = 0; exec_id < commit_receivers.size(); ++exec_id) {
+  for (int exec_id = 0; exec_id < exec_rnds.size(); ++exec_id) {
     dot_receivers.emplace_back(temp_dot_reciever.split());
   }
 
@@ -63,8 +62,7 @@ void DuploEvaluator::Setup() {
   kos_receiver.receive(commit_seed_choices, commit_seed_OTs, rnd, chan);
 
   //Setup tmp commit_receiver
-  SplitCommitReceiver string_tmp_receiver;
-  string_tmp_receiver.SetMsgBitSize(CSEC);
+  SplitCommitReceiver string_tmp_receiver(CSEC);
 
   std::vector<osuCrypto::block> string_msgs(CODEWORD_BITS);
   osuCrypto::BitVector string_choices(CODEWORD_BITS);
@@ -75,7 +73,7 @@ void DuploEvaluator::Setup() {
   }
 
   string_tmp_receiver.SetSeedOTs(string_msgs, string_choices);
-  string_tmp_receiver.GetCloneReceivers(commit_receivers.size(), rnd, commit_receivers, exec_rnds);
+  commit_receivers = string_tmp_receiver.GetCloneReceivers(exec_rnds.size(), rnd, exec_rnds);
 
   BYTEArrayVector recov_share(1, CODEWORD_BYTES);
   string_tmp_receiver.Commit(recov_share, rnd, chan);
