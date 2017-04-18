@@ -2136,7 +2136,6 @@ bool DuploEvaluator::DecommitOutPermBits(uint32_t exec_id, std::vector<std::pair
 
   BYTEArrayVector decommit_lsb_share(num_eval_total_outputs, CODEWORD_BYTES);
 
-  uint32_t curr_bit_pos = 0;
   uint32_t curr_eval_out_idx = 0;
   for (int l = 0; l < exec_num_components; ++l) {
     uint32_t curr_component = components_from + l;
@@ -2151,11 +2150,11 @@ bool DuploEvaluator::DecommitOutPermBits(uint32_t exec_id, std::vector<std::pair
 
       std::copy(EvalGarbledCircuit::out_key_share(circuit, component_aux_data.data(), eval_outputs[curr_component][i]),
                 EvalGarbledCircuit::out_key_share(circuit, component_aux_data.data(), eval_outputs[curr_component][i] + 1),
-                decommit_lsb_share[curr_bit_pos]);
+                decommit_lsb_share[curr_eval_out_idx]);
 
-      XOR_CodeWords(decommit_lsb_share[curr_bit_pos], output_masks_shares[curr_bit_pos]);
+      XOR_CodeWords(decommit_lsb_share[curr_eval_out_idx], output_masks_shares[curr_eval_out_idx]);
 
-      ++curr_bit_pos;
+      ++curr_eval_out_idx;
     }
   }
 
@@ -2170,13 +2169,14 @@ bool DuploEvaluator::DecommitOutPermBits(uint32_t exec_id, std::vector<std::pair
     }
   }
 
-  curr_bit_pos = 0;
+  curr_eval_out_idx = 0;
   for (int l = 0; l < exec_num_components; ++l) {
     uint32_t curr_component = components_from + l;
     output_decodings.emplace_back(eval_outputs[curr_component].size());
+    
     for (int i = 0; i < eval_outputs[curr_component].size(); ++i) {
-      output_decodings[l][i] = GetLSB(committed_values[curr_bit_pos]);
-      ++curr_bit_pos;
+      output_decodings[l][i] = GetLSB(committed_values[curr_eval_out_idx]);
+      ++curr_eval_out_idx;
     }
   }
 

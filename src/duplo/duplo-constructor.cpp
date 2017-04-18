@@ -1800,6 +1800,8 @@ void DuploConstructor::DecommitOutPermBits(uint32_t exec_id, std::vector<std::pa
     BYTEArrayVector(num_eval_total_outputs, CODEWORD_BYTES)
   };
 
+  BYTEArrayVector tmp_lsb(2, CODEWORD_BYTES);
+
   uint32_t curr_bit_pos = 0;
   uint32_t curr_eval_out_idx = 0;
   for (int l = 0; l < exec_num_components; ++l) {
@@ -1810,30 +1812,33 @@ void DuploConstructor::DecommitOutPermBits(uint32_t exec_id, std::vector<std::pa
 
     BYTEArrayVector component_aux_data;
     persistent_storage.ReadBuckets(component_name, AUXDATA, component_num, 1, component_aux_data, true, exec_id);
+
+    for (int i = 0; i < eval_outputs[curr_component].size(); ++i) {
+      std::copy(ConstGarbledCircuit::out_key_commit0(circuit, component_aux_data.data(), eval_outputs[curr_component][i]),
+                ConstGarbledCircuit::out_key_commit0(circuit, component_aux_data.data(), eval_outputs[curr_component][i] + 1),
+                decommit_lsb_share[0][curr_eval_out_idx]);
+      std::copy(ConstGarbledCircuit::out_key_commit1(circuit, component_aux_data.data(), eval_outputs[curr_component][i]),
+                ConstGarbledCircuit::out_key_commit1(circuit, component_aux_data.data(), eval_outputs[curr_component][i] + 1),
+                decommit_lsb_share[1][curr_eval_out_idx]);
+
+      XOR_CodeWords(decommit_lsb_share[0][curr_eval_out_idx], output_lsb_masks_shares[curr_eval_out_idx]);
+      XOR_CodeWords(decommit_lsb_share[1][curr_eval_out_idx], output_lsb_masks_shares[curr_eval_out_idx] + CODEWORD_BYTES);
+      ++curr_eval_out_idx;
+    }
+
     output_decodings.emplace_back(const_outputs[curr_component].size());
 
-    for (int i = 0; i < circuit.num_out_wires; ++i) {
+    
+    for (int i = 0; i < const_outputs[curr_component].size(); ++i) {
 
-      std::copy(ConstGarbledCircuit::out_key_commit0(circuit, component_aux_data.data(), i),
-                ConstGarbledCircuit::out_key_commit0(circuit, component_aux_data.data(), i + 1),
-                decommit_lsb_share[0][curr_bit_pos]);
-      std::copy(ConstGarbledCircuit::out_key_commit1(circuit, component_aux_data.data(), i),
-                ConstGarbledCircuit::out_key_commit1(circuit, component_aux_data.data(), i + 1),
-                decommit_lsb_share[1][curr_bit_pos]);
+      std::copy(ConstGarbledCircuit::out_key_commit0(circuit, component_aux_data.data(), const_outputs[curr_component][i]),
+                ConstGarbledCircuit::out_key_commit0(circuit, component_aux_data.data(), const_outputs[curr_component][i] + 1),
+                tmp_lsb[0]);
+      std::copy(ConstGarbledCircuit::out_key_commit1(circuit, component_aux_data.data(), const_outputs[curr_component][i]),
+                ConstGarbledCircuit::out_key_commit1(circuit, component_aux_data.data(), const_outputs[curr_component][i] + 1),
+                tmp_lsb[1]);
 
-      if ((circuit.const_out_wires_start <= i) &&
-          (i < circuit.const_out_wires_stop)) {
-        output_decodings[l][i] = GetLSB(decommit_lsb_share[0][curr_bit_pos]) ^ GetLSB(decommit_lsb_share[1][curr_bit_pos]);
-      }
-
-      if ((circuit.eval_out_wires_start <= i) &&
-          (i < circuit.eval_out_wires_stop)) {
-        XOR_CodeWords(decommit_lsb_share[0][curr_bit_pos], output_lsb_masks_shares[curr_eval_out_idx]);
-        XOR_CodeWords(decommit_lsb_share[1][curr_bit_pos], output_lsb_masks_shares[curr_eval_out_idx] + CODEWORD_BYTES);
-        ++curr_eval_out_idx;
-      }
-
-      ++curr_bit_pos;
+      output_decodings[l][i] = GetLSB(tmp_lsb[0]) ^ GetLSB(tmp_lsb[1]);
     }
   }
 

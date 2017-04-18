@@ -24,7 +24,6 @@ void SetCircuitOffsetIndices(Circuit& circuit) {
 void SetComposedCircuitOffsetIndices(ComposedCircuit& composed_circuit) {
 
   composed_circuit.num_inp_wires = composed_circuit.num_eval_inp_wires + composed_circuit.num_const_inp_wires;
-  composed_circuit.num_out_wires = std::max(composed_circuit.num_const_out_wires, composed_circuit.num_eval_out_wires);
 }
 
 void AddOutputIdentityGates(Circuit& circuit) {
@@ -289,20 +288,32 @@ std::vector<std::vector<uint32_t>> ComposedCircuit::GetOutputIndices(bool is_con
 
   std::vector<std::vector<uint32_t>> res;
 
+  uint32_t const_out_start = 0;
+  uint32_t eval_out_start = num_out_wires - num_eval_out_wires;
+
+  uint32_t curr_global_output_wire = 0;
   for (int i = 0; i < output_circuits.size(); ++i) {
     std::string circuit_name = circuits[output_circuits[i]].first;
     uint32_t function_num = name_to_function_num[circuit_name];
     Circuit& circuit = functions[function_num];
 
+    uint32_t curr_local_out_wires = 0;
     res.emplace_back(std::vector<uint32_t>());
-    if (is_const) {
-      for (int j = circuit.const_out_wires_start; j < circuit.const_out_wires_stop; ++j) {
-        res.back().emplace_back(j);
+    for (int j = 0; j < circuit.num_out_wires; ++j) {
+      if (is_const) {
+        if (curr_global_output_wire >= const_out_start &&
+            curr_global_output_wire < num_const_out_wires) {
+          res.back().emplace_back(curr_local_out_wires);
+        }
+      } else {
+        if (curr_global_output_wire >= eval_out_start &&
+            curr_global_output_wire < num_out_wires) {
+          res.back().emplace_back(curr_local_out_wires);
+        }
       }
-    } else {
-      for (int j = circuit.eval_out_wires_start; j < circuit.eval_out_wires_stop; ++j) {
-        res.back().emplace_back(j);
-      }
+
+      ++curr_local_out_wires;
+      ++curr_global_output_wire;
     }
   }
 
@@ -327,15 +338,13 @@ ComposedCircuit ParseComposedCircuit(char raw_circuit[], std::string circuits_pr
   composed_circuit.num_eval_inp_wires = (uint32_t) atoi(raw_circuit);
 
   raw_circuit = strchr(raw_circuit, ' ') + 1;
+  composed_circuit.num_out_wires = (uint32_t) atoi(raw_circuit);
+
+  raw_circuit = strchr(raw_circuit, ' ') + 1;
   composed_circuit.num_const_out_wires = (uint32_t) atoi(raw_circuit);
 
   raw_circuit = strchr(raw_circuit, ' ') + 1;
   composed_circuit.num_eval_out_wires = (uint32_t) atoi(raw_circuit);
-
-  if (composed_circuit.num_const_out_wires != composed_circuit.num_eval_out_wires) {
-    std::cout << "Currently, only supported that parties have the same output wires!" << std::endl;
-    throw std::runtime_error("Currently, only supported that parties have the same output!");
-  }
 
   raw_circuit = strchr(raw_circuit, '\n') + 1; //skip rest of line
   raw_circuit = strchr(raw_circuit, '\n') + 1; //skip entire empty line
