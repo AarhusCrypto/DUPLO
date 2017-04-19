@@ -241,6 +241,7 @@ ComposedCircuit::ComposedCircuit(Circuit circuit, uint32_t num_parallel_copies, 
   num_eval_inp_wires = circuit.num_eval_inp_wires * num_parallel_copies;
   num_const_out_wires = circuit.num_const_out_wires * num_parallel_copies;
   num_eval_out_wires = circuit.num_eval_out_wires * num_parallel_copies;
+  num_out_wires = circuit.num_out_wires * num_parallel_copies;
 
   if (num_const_out_wires != num_eval_out_wires) {
     std::cout << "Currently, only supported that parties have the same output wires!" << std::endl;
