@@ -194,7 +194,6 @@ int main(int argc, const char* argv[]) {
   }
 
 
-
   //Values used for network syncing after each phase
   uint8_t rcv;
   uint8_t snd;
@@ -203,6 +202,10 @@ int main(int argc, const char* argv[]) {
   auto setup_begin = GET_TIME();
   duplo_eval.Setup();
   auto setup_end = GET_TIME();
+
+  //Sync with Constructor
+  duplo_eval.chan.send(&snd, 1);
+  duplo_eval.chan.recv(&rcv, 1);
 
   uint64_t setup_data_sent = duplo_eval.GetTotalDataSent();
 

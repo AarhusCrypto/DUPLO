@@ -205,6 +205,10 @@ int main(int argc, const char* argv[]) {
   duplo_const.Setup();
   auto setup_end = GET_TIME();
 
+  //Sync with Evaluator
+  duplo_const.chan.recv(&rcv, 1);
+  duplo_const.chan.send(&snd, 1);
+
   uint64_t setup_data_sent = duplo_const.GetTotalDataSent();
 
   //Run Preprocessing phase
