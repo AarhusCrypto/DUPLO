@@ -76,6 +76,15 @@ int main(int argc, const char* argv[]) {
   );
 
   opt.add(
+    default_bristol.c_str(), // Default.
+    0, // Required?
+    1, // Number of args expected.
+    0, // Delimiter if expecting multiple args.
+    "bristol format", // Help description.
+    "-b"
+  );
+
+  opt.add(
     default_circuit_file.c_str(), // Default.
     0, // Required?
     1, // Number of args expected.
@@ -101,7 +110,7 @@ int main(int argc, const char* argv[]) {
   }
 
   //Copy inputs into the right variables
-  int num_iters, num_execs_components, num_execs_auths, num_execs_online, port, ram_only;
+  int num_iters, num_execs_components, num_execs_auths, num_execs_online, port, ram_only, bristol_file;
   std::vector<int> num_execs;
   std::string circuit_name, ip_address, exec_name, circuit_file;
   std::string prefix("eval_");
@@ -109,6 +118,7 @@ int main(int argc, const char* argv[]) {
   opt.get("-n")->getInt(num_iters);
   opt.get("-c")->getString(circuit_name);
   opt.get("-d")->getInt(ram_only);
+  opt.get("-b")->getInt(bristol_file);
   opt.get("-f")->getString(circuit_file);
   circuit_name = prefix + circuit_name;
 
@@ -121,60 +131,56 @@ int main(int argc, const char* argv[]) {
   opt.get("-p")->getInt(port);
 
   ComposedCircuit composed_circuit;
-
   if (!circuit_file.empty()) {
-    exec_name = prefix + std::to_string(num_iters) + circuit_file;
-    composed_circuit = read_composed_circuit(circuit_file.c_str(), circuit_name);
+    exec_name = prefix + std::to_string(num_iters);
+    if (!bristol_file) {
+      composed_circuit = read_composed_circuit(circuit_file.c_str(), circuit_name);  
+    } else {
+      Circuit tmp = read_bristol_circuit(circuit_file.c_str());
+      tmp.circuit_name = exec_name;
+      composed_circuit = ComposedCircuit(tmp, num_iters);
+    }
   } else {
-
     if (circuit_name.find("p_aes") != std::string::npos) {
       exec_name = prefix + std::to_string(num_iters) + "xAES";
       Circuit tmp = read_bristol_circuit("test/data/AES-non-expanded.txt");
       tmp.circuit_name = exec_name;
-      ComposedCircuit composed_tmp = ComposedCircuit(tmp, num_iters);
-      composed_circuit = composed_tmp;
+      composed_circuit = ComposedCircuit(tmp, num_iters);
     } else if (circuit_name.find("p_sha-256") != std::string::npos) {
       exec_name = prefix + std::to_string(num_iters) + "xSHA-256";
       Circuit tmp = read_bristol_circuit("test/data/sha-256.txt");
       tmp.circuit_name = exec_name;
-      ComposedCircuit composed_tmp = ComposedCircuit(tmp, num_iters);
-      composed_circuit = composed_tmp;
+      composed_circuit = ComposedCircuit(tmp, num_iters);
     } else if (circuit_name.find("p_sha-1") != std::string::npos) {
       exec_name = prefix + std::to_string(num_iters) + "xSHA-1";
       Circuit tmp = read_bristol_circuit("test/data/sha-1.txt");
       tmp.circuit_name = exec_name;
-      ComposedCircuit composed_tmp = ComposedCircuit(tmp, num_iters);
-      composed_circuit = composed_tmp;
+      composed_circuit = ComposedCircuit(tmp, num_iters);
     } else if (circuit_name.find("p_cbc") != std::string::npos) {
       exec_name = prefix + std::to_string(num_iters) + "xAES-CBC-MAC";
       Circuit tmp = read_bristol_circuit("test/data/aescbcmac16.txt");
       tmp.circuit_name = exec_name;
-      ComposedCircuit composed_tmp = ComposedCircuit(tmp, num_iters);
-      composed_circuit = composed_tmp;
+      composed_circuit = ComposedCircuit(tmp, num_iters);
     } else if (circuit_name.find("p_and") != std::string::npos) {
       exec_name = prefix + std::to_string(num_iters) + "xAND";
       Circuit tmp = read_bristol_circuit("test/data/and.txt");
       tmp.circuit_name = exec_name;
-      ComposedCircuit composed_tmp = ComposedCircuit(tmp, num_iters);
-      composed_circuit = composed_tmp;
+      composed_circuit = ComposedCircuit(tmp, num_iters);
     } else if (circuit_name.find("p_add32") != std::string::npos) {
       exec_name = prefix + std::to_string(num_iters) + "xADD32";
       Circuit tmp = read_bristol_circuit("test/data/adder_32bit.txt");
       tmp.circuit_name = exec_name;
-      ComposedCircuit composed_tmp = ComposedCircuit(tmp, num_iters);
-      composed_circuit = composed_tmp;
+      composed_circuit = ComposedCircuit(tmp, num_iters);
     } else if (circuit_name.find("p_add64") != std::string::npos) {
       exec_name = prefix + std::to_string(num_iters) + "xADD64";
       Circuit tmp = read_bristol_circuit("test/data/adder_64bit.txt");
       tmp.circuit_name = exec_name;
-      ComposedCircuit composed_tmp = ComposedCircuit(tmp, num_iters);
-      composed_circuit = composed_tmp;
+      composed_circuit = ComposedCircuit(tmp, num_iters);
     } else if (circuit_name.find("p_mul32") != std::string::npos) {
       exec_name = prefix + std::to_string(num_iters) + "xMUL32";
       Circuit tmp = read_bristol_circuit("test/data/mult_32x32.txt");
       tmp.circuit_name = exec_name;
-      ComposedCircuit composed_tmp = ComposedCircuit(tmp, num_iters);
-      composed_circuit = composed_tmp;
+      composed_circuit = ComposedCircuit(tmp, num_iters);
     } else {
       std::cout << "No such circuit" << std::endl;
       return 1;
